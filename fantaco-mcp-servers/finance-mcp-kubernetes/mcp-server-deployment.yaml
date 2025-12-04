@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mcp-finance
+  labels:
+    app: mcp-finance
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mcp-finance
+  template:
+    metadata:
+      labels:
+        app: mcp-finance
+    spec:
+      containers:
+      - name: mcp-server
+        image: quay.io/burrsutter/mcp-server-finance:1.0.0
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 9002
+          name: http
+          protocol: TCP
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "500m"

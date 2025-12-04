@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgresql-customer
+  labels:
+    app: postgresql-customer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgresql-customer
+  template:
+    metadata:
+      labels:
+        app: postgresql-customer
+    spec:
+      containers:
+        - name: postgresql
+          image: docker.io/library/postgres:15
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: POSTGRES_USER
+              value: "postgres"
+            - name: POSTGRES_PASSWORD
+              value: "postgres"
+            - name: POSTGRES_DB
+              value: "fantaco_customer"
+          ports:
+            - containerPort: 5432
+              name: postgres-cust
+          volumeMounts:
+            - name: postgres-customer-data
+              mountPath: /var/lib/postgresql/data
+      volumes:
+        - name: postgres-customer-data
+          emptyDir: {}

@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fantaco-finance-main
+  labels:
+    app: fantaco-finance-main
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: fantaco-finance-main
+  template:
+    metadata:
+      labels:
+        app: fantaco-finance-main
+    spec:
+      containers:
+      - name: fantaco-finance-main
+        image: quay.io/burrsutter/fantaco-finance-main:1.0.0
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8082
+          name: http
+          protocol: TCP
+        env:
+        - name: SPRING_DATASOURCE_URL
+          valueFrom:
+            configMapKeyRef:
+              name: fantaco-finance-config
+              key: database.url
+        - name: SPRING_DATASOURCE_USERNAME
+          valueFrom:
+            configMapKeyRef:
+              name: fantaco-finance-config
+              key: database.username
+        - name: SPRING_DATASOURCE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: fantaco-finance-secret
+              key: database.password
+        livenessProbe:
+          httpGet:
+            path: /api/finance/health
+            port: 8082
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /api/finance/health
+            port: 8082
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+        resources:
+          limits:
+            cpu: 500m
+            memory: 512Mi
+          requests:
+            cpu: 250m
+            memory: 256Mi

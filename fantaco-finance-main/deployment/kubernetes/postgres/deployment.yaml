@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgresql-finance
+  labels:
+    app: postgresql-finance
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgresql-finance
+  template:
+    metadata:
+      labels:
+        app: postgresql-finance
+    spec:
+      containers:
+        - name: postgresql
+          image: docker.io/library/postgres:15
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: POSTGRES_USER
+              value: "postgres"
+            - name: POSTGRES_PASSWORD
+              value: "postgres"
+            - name: POSTGRES_DB
+              value: "fantaco_finance"
+          ports:
+            - containerPort: 5432
+              name: postgres-fin
+          volumeMounts:
+            - name: postgres-finance-data
+              mountPath: /var/lib/postgresql/data
+          livenessProbe:
+            tcpSocket:
+              port: 5432
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - pg_isready -U postgres -d fantaco_finance
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 3
+          resources:
+            limits:
+              cpu: 500m
+              memory: 512Mi
+            requests:
+              cpu: 250m
+              memory: 256Mi
+
+      volumes:
+        - name: postgres-finance-data
+          emptyDir: {}

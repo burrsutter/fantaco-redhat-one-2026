@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mcp-customer
+  labels:
+    app: mcp-customer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mcp-customer
+  template:
+    metadata:
+      labels:
+        app: mcp-customer
+    spec:
+      containers:
+      - name: mcp-server
+        image: quay.io/burrsutter/mcp-server-customer:1.0.0
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 9001
+          name: http
+          protocol: TCP
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "500m"

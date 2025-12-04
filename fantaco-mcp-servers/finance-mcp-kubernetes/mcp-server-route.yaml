@@ -1,0 +1,15 @@
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: mcp-finance-route
+  labels:
+    app: mcp-finance
+spec:
+  to:
+    kind: Service
+    name: mcp-finance-service
+  port:
+    targetPort: http
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect

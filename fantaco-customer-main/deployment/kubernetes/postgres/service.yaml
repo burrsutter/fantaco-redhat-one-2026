@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-cust
+  labels:
+    app: postgres-cust
+spec:
+  type: ClusterIP
+  ports:
+    - port: 5432
+      targetPort: postgres-cust
+      protocol: TCP
+      name: postgres-cust
+  selector:
+    app: postgresql-customer

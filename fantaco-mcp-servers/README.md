@@ -18,6 +18,7 @@ export CUSTOMER_API_BASE_URL="where-your-customer-API-is"
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
+pip install -r requirements.txt
 ```
 
 ```bash
@@ -79,6 +80,7 @@ cd finance-mcp
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
+pip install -r requirements.txt
 ```
 
 

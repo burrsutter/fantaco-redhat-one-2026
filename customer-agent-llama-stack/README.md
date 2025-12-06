@@ -81,22 +81,29 @@ See main README.md
 1. Install dependencies:
 
 ```bash
+python3.14 -m venv .venv
+source .venv/bin/activate
+```
+
+```bash
 pip install -r requirements.txt
 ```
 
 2. Configure environment variables in `.env`:
+
+Edit the .env and/or create the env variables via the terminal
 
 ```bash
 # Llama Stack Configuration
 export LLAMA_STACK_BASE_URL=http://localhost:8321
 export LLAMA_STACK_OPENAI_ENDPOINT=http://localhost:8321/v1
 export API_KEY=fake
-# export INFERENCE_MODEL=ollama/llama3.2:3b
+export INFERENCE_MODEL=ollama/llama3.2:3b
 # export INFERENCE_MODEL=ollama/llama3.2:3b-instruct-fp16
-export INFERENCE_MODEL=ollama/qwen2.5-coder:14b-instruct-fp16
+# export INFERENCE_MODEL=ollama/qwen2.5-coder:14b-instruct-fp16
 
 # MCP Server Configuration
-MCP_CUSTOMER_SERVER_URL=https://your-customer-mcp-server.com/mcp
+MCP_CUSTOMER_SERVER_URL=http://localhost:9001/mcp
 ```
 
 ## Usage

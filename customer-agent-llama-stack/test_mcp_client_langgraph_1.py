@@ -33,8 +33,19 @@ logger = logging.getLogger(__name__)
 load_dotenv()
 
 # MCP Server Configuration
-MCP_URL = "http://127.0.0.1:8000/mcp"
+MCP_URL = os.getenv('CUSTOMER_AGENT_URL')
 MCP_SESSION_ID = None
+TEST_INFERENCE_MODEL = os.getenv("TEST_INFERENCE_MODEL")
+
+# Log environment variables at startup
+logger.info("="*80)
+logger.info("Environment Variables at Startup:")
+logger.info("="*80)
+logger.info(f"CUSTOMER_AGENT_URL: {os.getenv('CUSTOMER_AGENT_URL')}")
+logger.info(f"MCP_URL: {MCP_URL}")
+logger.info(f"TEST_INFERENCE_MODEL: {TEST_INFERENCE_MODEL}")
+logger.info("="*80)
+
 
 
 class MCPClient:
@@ -161,7 +172,7 @@ class AgentState(TypedDict):
 
 # Initialize the LLM
 llm = ChatOllama(
-    model=os.getenv("OLLAMA_MODEL", "llama3.2:3b"),
+    model=TEST_INFERENCE_MODEL,
     temperature=0
 )
 
@@ -312,7 +323,7 @@ def main():
 
     # Example queries to test
     queries = [
-        "Search for contact name Thomas Hardy"   
+        "Search for contact name, company name and company id by email address thomashardy@example.com"   
     ]
 
     # Run the conversation

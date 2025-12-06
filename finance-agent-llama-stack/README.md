@@ -77,21 +77,32 @@ Execute the finance agent with detailed execution trace.
 
 1. Install dependencies:
 
+
+```bash
+python3.14 -m venv .venv
+source .venv/bin/activate
+```
+
 ```bash
 pip install -r requirements.txt
 ```
 
+
 2. Configure environment variables in `.env`:
+
+Edit the .env and/or create the env variables via the terminal
 
 ```bash
 # Llama Stack Configuration
-LLAMA_STACK_BASE_URL=https://your-llama-stack-instance.com/
-LLAMA_STACK_OPENAI_ENDPOINT=https://your-llama-stack-instance.com/v1
-INFERENCE_MODEL=vllm-inference-1/llama-32-3b-instruct
-API_KEY=fake
+export LLAMA_STACK_BASE_URL=http://localhost:8321
+export LLAMA_STACK_OPENAI_ENDPOINT=http://localhost:8321/v1
+export API_KEY=fake
+export INFERENCE_MODEL=ollama/llama3.2:3b
+# export INFERENCE_MODEL=ollama/llama3.2:3b-instruct-fp16
+# export INFERENCE_MODEL=ollama/qwen2.5-coder:14b-instruct-fp16
 
 # MCP Server Configuration
-MCP_FINANCE_SERVER_URL=https://your-finance-mcp-server.com/mcp
+MCP_FINANCE_SERVER_URL=http://localhost:9001/mcp
 ```
 
 ## Usage
@@ -101,10 +112,10 @@ MCP_FINANCE_SERVER_URL=https://your-finance-mcp-server.com/mcp
 Start the MCP server with SSE transport:
 
 ```bash
-python mcp_server.py
+python mcp_server_llama_stack_agent.py
 ```
 
-By default, the server runs on `http://localhost:8000/sse`
+By default, the server runs on `http://localhost:8001/mcp`
 
 ### Using the Example Client
 

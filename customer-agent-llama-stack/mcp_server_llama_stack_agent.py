@@ -56,9 +56,13 @@ if env_path:
 else:
     logger.warning("No .env file found, using system environment variables")
 
-# Initialize FastMCP server with SSE transport
+# Get port configuration
+CUSTOMER_AGENT_PORT = int(os.getenv("CUSTOMER_AGENT_PORT", "8000"))
+logger.info(f"CUSTOMER_AGENT_PORT: {CUSTOMER_AGENT_PORT}")
+
+# Initialize FastMCP server with port configuration
 logger.info("Initializing FastMCP server: Customer Agent MCP Server")
-mcp = FastMCP("Customer Agent MCP Server")
+mcp = FastMCP("Customer Agent MCP Server", port=CUSTOMER_AGENT_PORT)
 
 # Global Llama Stack client
 llama_client = None
@@ -101,8 +105,8 @@ def customer_agent(prompt: str) -> str:
         INFERENCE_MODEL = os.getenv("INFERENCE_MODEL")
         MCP_CUSTOMER_SERVER_URL = os.getenv("MCP_CUSTOMER_SERVER_URL")
 
-        logger.info(f"Using inference model: {INFERENCE_MODEL}")
-        logger.info(f"MCP Customer Server URL: {MCP_CUSTOMER_SERVER_URL}")
+        logger.info(f"INFERENCE_MODEL: {INFERENCE_MODEL}")
+        logger.info(f"MCP_CUSTOMER_SERVER_URL: {MCP_CUSTOMER_SERVER_URL}")
 
         if not MCP_CUSTOMER_SERVER_URL:
             logger.error("MCP_CUSTOMER_SERVER_URL not configured in environment")
@@ -232,6 +236,7 @@ if __name__ == "__main__":
     logger.info(f"  LLAMA_STACK_BASE_URL: {LLAMA_STACK_BASE_URL}")
     logger.info(f"  INFERENCE_MODEL: {INFERENCE_MODEL}")
     logger.info(f"  MCP_CUSTOMER_SERVER_URL: {MCP_CUSTOMER_SERVER_URL}")
+    logger.info(f"  CUSTOMER_AGENT_PORT: {CUSTOMER_AGENT_PORT}")
     logger.info("=" * 60)
 
     mcp.run(transport="streamable-http")

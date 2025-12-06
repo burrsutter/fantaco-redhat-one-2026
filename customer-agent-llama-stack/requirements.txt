@@ -20,3 +20,4 @@ requests>=2.32.0
 # Testing dependencies (optional)
 pytest
 pytest-asyncio
+

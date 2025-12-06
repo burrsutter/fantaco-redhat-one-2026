@@ -11,6 +11,7 @@ sophisticated agent that can:
 
 import os
 import json
+import logging
 import requests
 from typing import Annotated, TypedDict, Literal
 from dotenv import load_dotenv
@@ -20,6 +21,13 @@ from langgraph.graph.message import add_messages
 from langchain_core.messages import BaseMessage, HumanMessage, AIMessage, ToolMessage
 from langchain_core.tools import tool
 from langchain_ollama import ChatOllama
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 
 # Load environment variables
 load_dotenv()
@@ -75,20 +83,34 @@ class MCPClient:
             "id": 3
         }
 
+        logger.info(f"📤 Sending MCP request to tool '{tool_name}'")
+        logger.info(f"📤 MCP Payload: {json.dumps(call_payload, indent=2)}")
+        logger.info(f"📤 Tool Arguments: {json.dumps(arguments, indent=2)}")
+
         response = requests.post(self.url, headers=self.headers, json=call_payload)
+
+        logger.info(f"📥 Received MCP response (status: {response.status_code})")
 
         # Parse SSE response
         text = response.text
+        logger.info(f"📥 Raw response text (first 500 chars): {text[:500]}...")
+
         lines = text.split('\n')
         for line in lines:
             if line.startswith('data: '):
                 data = json.loads(line[6:])
+                logger.info(f"📥 Parsed MCP data: {json.dumps(data, indent=2)}")
                 if 'result' in data:
                     if 'content' in data['result']:
-                        return data['result']['content'][0]['text']
+                        result_text = data['result']['content'][0]['text']
+                        logger.info(f"📥 Extracted result from 'content': {result_text[:200]}...")
+                        return result_text
                     elif 'structuredContent' in data['result']:
-                        return data['result']['structuredContent']['result']
+                        result_text = data['result']['structuredContent']['result']
+                        logger.info(f"📥 Extracted result from 'structuredContent': {result_text[:200]}...")
+                        return result_text
 
+        logger.error("❌ Error: Could not parse MCP response")
         return "Error: Could not parse MCP response"
 
 
@@ -152,7 +174,28 @@ llm_with_tools = llm.bind_tools(tools)
 def agent_node(state: AgentState) -> AgentState:
     """The main agent that decides what to do"""
     print("\n🤖 Agent thinking...")
+
+    # Log the messages being sent to the LLM
+    logger.info("=" * 80)
+    logger.info("📤 SENDING TO LLM - Full conversation context:")
+    logger.info("=" * 80)
+    for i, msg in enumerate(state["messages"], 1):
+        msg_type = type(msg).__name__
+        logger.info(f"\nMessage {i} ({msg_type}):")
+        logger.info(f"  Content: {msg.content}")
+        if hasattr(msg, 'tool_calls') and msg.tool_calls:
+            logger.info(f"  Tool Calls: {msg.tool_calls}")
+        if hasattr(msg, 'tool_call_id'):
+            logger.info(f"  Tool Call ID: {msg.tool_call_id}")
+    logger.info("=" * 80)
+
     response = llm_with_tools.invoke(state["messages"])
+
+    logger.info("\n📥 LLM Response:")
+    logger.info(f"  Content: {response.content}")
+    if hasattr(response, 'tool_calls') and response.tool_calls:
+        logger.info(f"  Tool Calls Requested: {response.tool_calls}")
+
     return {"messages": [response]}
 
 
@@ -166,10 +209,16 @@ def tool_node(state: AgentState) -> AgentState:
     if not tool_calls:
         return {"messages": []}
 
+    logger.info(f"\n🔧 Executing {len(tool_calls)} tool call(s)")
+
     tool_messages = []
-    for tool_call in tool_calls:
+    for i, tool_call in enumerate(tool_calls, 1):
         tool_name = tool_call["name"]
         tool_args = tool_call["args"]
+
+        logger.info(f"\n🔧 Tool Call {i}:")
+        logger.info(f"  Name: {tool_name}")
+        logger.info(f"  Arguments: {json.dumps(tool_args, indent=4)}")
 
         # Execute the tool
         if tool_name == "search_customer":
@@ -178,6 +227,8 @@ def tool_node(state: AgentState) -> AgentState:
             result = get_customer_detailed.invoke(tool_args)
         else:
             result = f"Unknown tool: {tool_name}"
+
+        logger.info(f"  ✅ Tool Result (first 200 chars): {str(result)[:200]}...")
 
         # Create tool message
         tool_message = ToolMessage(

@@ -88,10 +88,12 @@ pip install -r requirements.txt
 
 ```bash
 # Llama Stack Configuration
-LLAMA_STACK_BASE_URL=http://localhost:8321
-LLAMA_STACK_OPENAI_ENDPOINT=http://localhost:8321/v1
-INFERENCE_MODEL=ollama/llama3.2:3b
-API_KEY=fake
+export LLAMA_STACK_BASE_URL=http://localhost:8321
+export LLAMA_STACK_OPENAI_ENDPOINT=http://localhost:8321/v1
+export API_KEY=fake
+# export INFERENCE_MODEL=ollama/llama3.2:3b
+# export INFERENCE_MODEL=ollama/llama3.2:3b-instruct-fp16
+export INFERENCE_MODEL=ollama/qwen2.5-coder:14b-instruct-fp16
 
 # MCP Server Configuration
 MCP_CUSTOMER_SERVER_URL=https://your-customer-mcp-server.com/mcp

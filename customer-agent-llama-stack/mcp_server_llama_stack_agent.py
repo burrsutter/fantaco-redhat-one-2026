@@ -98,7 +98,7 @@ def customer_agent(prompt: str) -> str:
     try:
         client = get_llama_client()
 
-        INFERENCE_MODEL = os.getenv("INFERENCE_MODEL", "ollama/llama3.2:3b")
+        INFERENCE_MODEL = os.getenv("INFERENCE_MODEL")
         MCP_CUSTOMER_SERVER_URL = os.getenv("MCP_CUSTOMER_SERVER_URL")
 
         logger.info(f"Using inference model: {INFERENCE_MODEL}")

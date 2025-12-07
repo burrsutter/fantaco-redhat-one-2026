@@ -29,6 +29,8 @@ def list_mcp_servers():
     for tg in toolgroups:
         logger.info("Toolgroup ID: %s", tg.identifier)
         logger.info("Provider ID: %s", tg.provider_id)
+        if hasattr(tg, 'mcp_endpoint') and tg.mcp_endpoint:
+            logger.info("MCP Endpoint URI: %s", tg.mcp_endpoint.get('uri') if isinstance(tg.mcp_endpoint, dict) else getattr(tg.mcp_endpoint, 'uri', None))
         logger.info("-" * 50)
     return toolgroups
 

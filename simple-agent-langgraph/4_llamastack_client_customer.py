@@ -1,16 +1,12 @@
 """
 Customer Search using Llama Stack Client
 
-This script attempts to search for customers using the Llama Stack Client.
+This script searches for customers using the Llama Stack Client and MCP tools.
 
 CURRENT STATUS:
-- Successfully registers and lists the customer_mcp toolgroup
-- tool_runtime.invoke_tool() doesn't have access to MCP toolgroup tools
-- agent.turn.create() with toolgroups parameter returns error:
-  "Toolgroup customer_mcp not found" despite it being in the available list
-
-This appears to be a Llama Stack server configuration or API issue where
-MCP toolgroups are registered but not properly accessible by the runtime.
+- Successfully invokes the search_customers MCP tool
+- Correct tool_name format: use just "search_customers" (not "customer_mcp::search_customers")
+- Returns customer data successfully from the customer MCP server
 """
 
 from llama_stack_client import Client
@@ -52,7 +48,7 @@ def search_customer_by_email(email="thomashardy@example.com"):
 
         # Invoke the search_customers tool directly
         result = client.tool_runtime.invoke_tool(
-            tool_name="customer_mcp::search_customers",
+            tool_name="search_customers",
             kwargs={"contact_email": email}
         )
 

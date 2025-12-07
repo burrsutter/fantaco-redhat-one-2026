@@ -30,40 +30,66 @@ def list_customer_tools():
     logger.info("MCP Server URL: %s", CUSTOMER_MCP_SERVER_URL)
     logger.info("")
 
-    # These tools are defined in the customer MCP server implementation
-    tools = [
-        {
-            "name": "search_customers",
-            "description": "Search for customers by various fields with partial matching",
-            "parameters": {
-                "company_name": "Filter by company name (partial matching, optional)",
-                "contact_name": "Filter by contact person name (partial matching, optional)",
-                "contact_email": "Filter by contact email address (partial matching, optional)",
-                "phone": "Filter by phone number (partial matching, optional)"
-            }
-        },
-        {
-            "name": "get_customer",
-            "description": "Get customer by ID - Retrieves a single customer record by its unique identifier",
-            "parameters": {
-                "customer_id": "The unique 5-character identifier of the customer"
-            }
-        }
-    ]
+    try:
+        # List all tools and filter for customer_mcp toolgroup
+        all_tools = client.tools.list()
 
-    for tool in tools:
-        logger.info("Tool Name: %s", tool['name'])
-        logger.info("Description: %s", tool['description'])
-        logger.info("Parameters:")
-        for param_name, param_desc in tool['parameters'].items():
-            logger.info("  - %s: %s", param_name, param_desc)
-        logger.info("-" * 50)
+        # Filter tools that belong to customer_mcp toolgroup
+        customer_tools = [tool for tool in all_tools if hasattr(tool, 'toolgroup_id') and tool.toolgroup_id == 'customer_mcp']
 
-    logger.info("=" * 50)
-    logger.info("Total tools: %d", len(tools))
-    logger.info("=" * 50)
+        if customer_tools:
+            for tool in customer_tools:
+                # Get the full tool object to inspect
+                tool_dict = tool.model_dump() if hasattr(tool, 'model_dump') else vars(tool)
 
-    return tools
+                tool_name = tool_dict.get('tool_name') or tool_dict.get('name') or tool_dict.get('identifier') or 'N/A'
+
+                logger.info("Tool Name: %s", tool_name)
+                logger.info("Description: %s", tool.description if hasattr(tool, 'description') else 'N/A')
+                logger.info("Toolgroup ID: %s", tool.toolgroup_id if hasattr(tool, 'toolgroup_id') else 'N/A')
+
+                if hasattr(tool, 'parameters'):
+                    logger.info("Parameters:")
+                    params = tool.parameters
+                    if hasattr(params, 'properties'):
+                        for param_name, param_info in params.properties.items():
+                            param_desc = param_info.get('description', 'No description') if isinstance(param_info, dict) else getattr(param_info, 'description', 'No description')
+                            param_type = param_info.get('type', 'any') if isinstance(param_info, dict) else getattr(param_info, 'type', 'any')
+                            param_required = param_name in getattr(params, 'required', [])
+                            logger.info("  - %s (%s)%s: %s", param_name, param_type, ' [required]' if param_required else '', param_desc)
+                elif hasattr(tool, 'input_schema'):
+                    logger.info("Parameters:")
+                    schema = tool.input_schema
+                    if hasattr(schema, 'properties'):
+                        for param_name, param_info in schema.properties.items():
+                            param_desc = param_info.get('description', 'No description') if isinstance(param_info, dict) else getattr(param_info, 'description', 'No description')
+                            param_type = param_info.get('type', 'any') if isinstance(param_info, dict) else getattr(param_info, 'type', 'any')
+                            param_required = param_name in getattr(schema, 'required', [])
+                            logger.info("  - %s (%s)%s: %s", param_name, param_type, ' [required]' if param_required else '', param_desc)
+
+                logger.info("-" * 50)
+
+            logger.info("=" * 50)
+            logger.info("Total tools: %d", len(customer_tools))
+            logger.info("=" * 50)
+
+            return customer_tools
+        else:
+            logger.warning("No tools found for customer_mcp toolgroup")
+
+            # Show all available tools for debugging
+            logger.info("All available tools:")
+            for tool in all_tools:
+                logger.info("  - %s (toolgroup: %s)",
+                           tool.tool_name if hasattr(tool, 'tool_name') else 'N/A',
+                           tool.toolgroup_id if hasattr(tool, 'toolgroup_id') else 'N/A')
+
+            return []
+
+    except Exception as e:
+        logger.error("Error fetching customer tools: %s", str(e))
+        logger.exception("Stack trace:")
+        return []
 
 
 if __name__ == "__main__":

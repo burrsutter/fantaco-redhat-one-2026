@@ -65,11 +65,15 @@ npm run dev
 http://localhost:3000
 ```
 
+## Screenshot
+
+![LangGraph Chat Assistant](chat-ui-1.png)
+
 ## Usage
 
 Simply type questions in the chat interface:
 
-- "Find all orders for john@example.com"
+- "Find all orders for thomashardy@example.com"
 - "What invoices does customer ABC123 have?"
 - "Show me customer information for maria@company.com"
 - "What is the status of order 12345?"

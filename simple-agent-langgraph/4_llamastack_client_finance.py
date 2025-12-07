@@ -27,6 +27,11 @@ BASE_URL = os.getenv("LLAMA_STACK_BASE_URL")
 API_KEY = os.getenv("LLAMA_STACK_API_KEY")
 INFERENCE_MODEL = os.getenv("INFERENCE_MODEL")
 
+logger.info("Configuration loaded:")
+logger.info("  Base URL: %s", BASE_URL)
+logger.info("  Model: %s", INFERENCE_MODEL)
+logger.info("  API Key: %s", "***" if API_KEY else "None")
+
 client = Client(
     base_url=BASE_URL,
     api_key=API_KEY
@@ -37,10 +42,6 @@ def fetch_order_history_by_customer(customer_id="AROUT"):
     """Fetch order history using Llama Stack tool_runtime to invoke finance MCP tool directly"""
 
     try:
-        # Log initialization details
-        logger.info("Llama Stack Base URL: %s", BASE_URL)
-        logger.info("")
-
         # Execute tool invocation
         logger.info("=" * 80)
         logger.info("Fetching order history for customer: %s", customer_id)

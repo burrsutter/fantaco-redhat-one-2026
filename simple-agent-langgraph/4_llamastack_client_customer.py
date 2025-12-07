@@ -27,6 +27,11 @@ BASE_URL = os.getenv("LLAMA_STACK_BASE_URL")
 API_KEY = os.getenv("LLAMA_STACK_API_KEY")
 INFERENCE_MODEL = os.getenv("INFERENCE_MODEL")
 
+logger.info("Configuration loaded:")
+logger.info("  Base URL: %s", BASE_URL)
+logger.info("  Model: %s", INFERENCE_MODEL)
+logger.info("  API Key: %s", "***" if API_KEY else "None")
+
 client = Client(
     base_url=BASE_URL,
     api_key=API_KEY
@@ -36,11 +41,7 @@ client = Client(
 def search_customer_by_email(email="thomashardy@example.com"):
     """Search for customer using Llama Stack tool_runtime to invoke customer MCP tool directly"""
 
-    try:
-        # Log initialization details
-        logger.info("Llama Stack Base URL: %s", BASE_URL)
-        logger.info("")
-
+    try:        
         # Execute tool invocation
         logger.info("=" * 50)
         logger.info("Searching for customer with email: %s", email)

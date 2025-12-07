@@ -1,0 +1,3 @@
+curl -sS -H "Content-Type: application/json" $LLAMA_STACK_BASE_URL/v1/toolgroups | jq -r '.data[] | select(.provider_id == 
+  "model-context-protocol") | .identifier'
+  

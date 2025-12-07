@@ -40,7 +40,7 @@ python 7_langgraph_client_list_orders_any_customer.py thomashardy@example.com
 python 8_langgraph_client_list_invoices_any_customer.py thomashardy@example.com
 ```
 
-## Fast API version 
+## Fast API Backend
 
 ```bash
 python 9_langgraph_fastapi.py
@@ -76,6 +76,9 @@ curl -sS -G "http://localhost:8000/question" --data-urlencode "q=list orders for
 curl -sS -G "http://localhost:8000/question" --data-urlencode "q=get me invoices for Liu Wong?"
 ```
 
+## Frontend 
+
+See [simple-agent-chat-ui](./simple-agent-chat-ui/README.md)
 
 
 

@@ -1,0 +1,1 @@
+curl -sS $LLAMA_STACK_BASE_URL/v1/models -H "Content-Type: application/json" | jq -r '.data[].identifier'

@@ -6,8 +6,10 @@
 ollama serve
 ```
 
+Pull down your needed models
+
 ```bash
-ollama run llama3.2:3b --keepalive 60m
+ollama pull llama3.2:3b
 ```
 
 ```bash
@@ -32,12 +34,16 @@ Install Deps
 uv run --with llama-stack llama stack list-deps starter | xargs -L1 uv pip install
 ```
 
-Run the server attaching itself to ollama
+Run the Llama Stack server attaching itself to ollama
+
 
 ```bash
 OLLAMA_URL=http://localhost:11434 uv run --with llama-stack llama stack run starter
 ```
 
+```bash
+cd llama-stack-scripts
+```
 
 ### What models are registered with Llama Stack 
 
@@ -83,6 +89,23 @@ curl -sS "$LLAMA_STACK_BASE_URL/v1/responses" \
       \"model\": \"$INFERENCE_MODEL\",
       \"input\": \"$QUESTION\"
     }" | jq -r '.output[0].content[0].text'
+```
+
+### What tools does Llama Stack have?
+
+```bash
+curl -sS -H "Content-Type: application/json" $LLAMA_STACK_BASE_URL/v1/toolgroups | jq
+```
+
+What MCP tools
+
+```bash
+curl -sS -H "Content-Type: application/json" $LLAMA_STACK_BASE_URL/v1/toolgroups | jq -r '.data[] | select(.identifier | endswith("mcp")) | .identifier'
+```
+
+```bash
+curl -sS -H "Content-Type: application/json" $LLAMA_STACK_BASE_URL/v1/toolgroups | jq -r '.data[] | select(.provider_id == 
+  "model-context-protocol") | .identifier'
 ```
 
 ## Start Customer Backend

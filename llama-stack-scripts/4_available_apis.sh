@@ -1,0 +1,1 @@
+curl -sS $LLAMA_STACK_BASE_URL/openapi.json | jq '.paths | keys'

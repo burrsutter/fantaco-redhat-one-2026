@@ -37,7 +37,7 @@ The app uses environment variables for configuration:
 You can set these in a `.env` file or export them:
 
 ```bash
-export PORT=3000
+export CHAT_UI_PORT=3000
 export FASTAPI_URL=http://localhost:8000
 ```
 
@@ -124,7 +124,7 @@ Health check endpoint.
 - Check that `FASTAPI_URL` is set correctly
 
 ### Port already in use
-- Change the port: `PORT=3001 npm start`
+- Change the port: `CHAT_UI_PORT=3001 npm start`
 
 ### No response from chatbot
 - Check FastAPI server logs for errors

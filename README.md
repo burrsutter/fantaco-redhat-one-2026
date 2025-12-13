@@ -28,7 +28,7 @@ export LLAMA_STACK_BASE_URL=http://localhost:8321
 export INFERENCE_MODEL=ollama/llama3.2:3b
 # export INFERENCE_MODEL=vllm/llama-4-scout-17b-16e-w4a16
 export LLAMA_STACK_LOG_FILE=logs/llama-stack-server.log
-export LLAMA_STACK_LOGGING="tools=debug,providers=debug,server=info"
+export LLAMA_STACK_LOGGING="tools=DEBUG,tool_runtime=DEBUG,providers=DEBUG,server=info"
 ```
 
 If using Ollama

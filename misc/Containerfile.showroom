@@ -21,11 +21,11 @@ RUN dnf install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.n
 
 # Python
 
-RUN dnf -y install python3.13 pip
+RUN dnf -y install python3.12 pip
 
 # Python 3.13 symlink
 
-RUN ln -s /usr/bin/python3.13 /usr/bin/python
+RUN ln -s /usr/bin/python3.12 /usr/bin/python
 
 
 # OC CLI

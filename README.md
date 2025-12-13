@@ -1,5 +1,6 @@
 # Llama Stack Workshop Materials
 
+![Architecture Diagram](./simple-agent-langgraph/architecture_diagram.png)
 
 ## Starting the model server 
 
@@ -45,7 +46,7 @@ export VLLM_URL=https://llama-4-scout-17b-16e-w4a16-maas-apicast-production.apps
 
 
 ```bash
-python3.13 -m venv .venv
+python3.12 -m venv .venv
 source .venv/bin/activate
 
 uv run python -V

@@ -19,15 +19,20 @@ REST API for managing customer master data. External systems can create, read, u
 - **Docker** (optional, for containerization)
 - **Kubernetes** (optional, for deployment)
 
+## Postgres 
+```bash
+createdb fantaco_customer
+```
+
 ## Build
 
 ```bash
 mvn clean package
 ```
 
-## Run Locally
+## localhost
 
-### Option 1: With Local PostgreSQL
+### With Local PostgreSQL
 
 Ensure PostgreSQL is running and update `src/main/resources/application.properties`:
 
@@ -43,6 +48,8 @@ Run the application and test it locally (see curl commands below for other tests
 mvn spring-boot:run
 ```
 
+or 
+
 ```bash
 mvn clean compile package
 ```
@@ -52,15 +59,19 @@ java -jar target/fantaco-customer-main-1.0.0.jar
 ```
 
 ```bash
-export CUST_URL=localhost:8081
+export CUST_URL=http://localhost:8081
 ```
 
 ```bash
-open http://$CUST_URL/api/customers
+open $CUST_URL/api/customers
 ```
 
 ```bash
-curl -sS http://$CUST_URL/api/customers | jq
+curl -sS $CUST_URL/api/customers | jq
+```
+
+```bash
+open $CUST_URL/swagger-ui/index.html
 ```
 
 
@@ -99,11 +110,13 @@ podman run -p 8081:8081 \
 oc new-project fantaco
 ```
 
-because I am using the docker.io postgres image
+IF you are using the [docker.io Postgres](https://hub.docker.com/_/postgres) image
 
 ```bash
 oc adm policy add-scc-to-user anyuid -z default
 ```
+
+The sample deployment.yaml uses a Red Hat rootless image (no root access required)
 
 Deploy Postgres
 
@@ -172,7 +185,7 @@ open $CUST_URL/api/customers
 curl -sS -L $CUST_URL/api/customers | jq
 ```
 
-```
+```bash
 open $CUST_URL/swagger-ui/index.html
 ```
 
@@ -195,30 +208,23 @@ export CUST_URL=http://localhost:8081
 ### Search Customers
 
 ```bash
-# Search by company name (partial match, case-insensitive)
-curl -sS -L "$CUST_URL/api/customers?companyName=Alfreds" | jq
-
 # Search by contact email
-# Finance
+curl -sS -L "$CUST_URL/api/customers?contactEmail=thomashardy%40example.com" | jq
+curl -sS -L "$CUST_URL/api/customers?contactEmail=franwilson%40example.com" | jq
 curl -sS -L "$CUST_URL/api/customers?contactEmail=liuwong%40example.com" | jq
-# THECR
 curl -sS -L "$CUST_URL/api/customers?contactEmail=linorodriguez%40example.com" | jq
-# FURIB
 curl -sS -L "$CUST_URL/api/customers?contactEmail=jaimeyorres%40example.com" | jq
-# LETSS
 curl -sS -L "$CUST_URL/api/customers?contactEmail=hannamoos%40example.com" | jq
-# BLAUS
 curl -sS -L "$CUST_URL/api/customers?contactEmail=mariebertrand%40example.com" | jq
-# PARIS
-
 curl -sS -L "$CUST_URL/api/customers?contactEmail=victoriaashworth%40example.com" | jq
 curl -sS -L "$CUST_URL/api/customers?contactEmail=yangwang%40example.com" | jq
 curl -sS -L "$CUST_URL/api/customers?contactEmail=peterfranken%40example.com" | jq
-curl -sS -L "$CUST_URL/api/customers?contactEmail=thomashardy%40example.com" | jq
 curl -sS -L "$CUST_URL/api/customers?contactEmail=diegoroel%40example.com" | jq
-
 curl -sS -L "$CUST_URL/api/customers?contactEmail=janetelimeira%40example.com" | jq
-curl -sS -L "$CUST_URL/api/customers?contactEmail=franwilson%40example.com" | jq
+
+# Search by company name (partial match, case-insensitive)
+curl -sS -L "$CUST_URL/api/customers?companyName=Alfreds" | jq
+
 
 # Search by phone
 curl -sS -L "$CUST_URL/api/customers?phone=030" | jq
@@ -330,24 +336,6 @@ curl -X DELETE $CUST_URL/api/customers/ALFKI
 }
 ```
 
-## Kubernetes Deployment
-
-### Apply Manifests
-
-```bash
-kubectl apply -f deployment/kubernetes/configmap.yaml
-kubectl apply -f deployment/kubernetes/deployment.yaml
-kubectl apply -f deployment/kubernetes/service.yaml
-kubectl apply -f deployment/kubernetes/route.yaml
-```
-
-### Helm Chart
-
-```bash
-helm install fantaco-customer deployment/helm/fantaco-customer-main \
-  --set database.host=postgres-service \
-  --set database.password=yourpassword
-```
 
 ## Testing
 
@@ -356,20 +344,6 @@ helm install fantaco-customer deployment/helm/fantaco-customer-main \
 ```bash
 mvn test
 ```
-
-### Run Integration Tests Only
-
-```bash
-mvn test -Dtest="**/*IntegrationTest"
-```
-
-### Run Contract Tests Only
-
-```bash
-mvn test -Dtest="**/*ContractTest"
-```
-
-**Note**: Integration tests use Testcontainers, which requires Docker to be running.
 
 ## Technology Stack
 
@@ -381,7 +355,7 @@ mvn test -Dtest="**/*ContractTest"
 - **Springdoc OpenAPI 2.2.0**
 - **Testcontainers** (for integration testing)
 - **Docker** (Red Hat UBI9 base images)
-- **Kubernetes** (with Helm charts)
+- **Kubernetes** 
 
 ## Architecture
 

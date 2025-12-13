@@ -22,175 +22,34 @@ A comprehensive Finance REST API built with Java 21, Spring Boot 3.2, Maven, Pos
 - **Container**: Docker with UBI9/OpenJDK
 - **Orchestration**: Kubernetes
 
-## API Endpoints
-
-### 1. Get Order History
-**POST** `/api/finance/orders/history`
-
-Retrieve order history for a specific customer with optional date filtering.
-
-**Request Body:**
-```json
-{
-  "customerId": "LONEP",
-  "startDate": "2024-01-01T00:00:00",
-  "endDate": "2024-01-31T23:59:59",
-  "limit": 50
-}
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "message": "Order history retrieved successfully",
-  "data": [
-    {
-      "id": 1,
-      "orderNumber": "ORD-001",
-      "customerId": "LONEP",
-      "totalAmount": 299.99,
-      "status": "DELIVERED",
-      "orderDate": "2024-01-15T10:30:00",
-      "createdAt": "2024-01-15T10:30:00"
-    }
-  ],
-  "count": 1
-}
-```
-
-### 2. Get Invoice History
-**POST** `/api/finance/invoices/history`
-
-Retrieve invoice history for a specific customer with optional date filtering.
-
-**Request Body:**
-```json
-{
-  "customerId": "LONEP",
-  "startDate": "2024-01-01T00:00:00",
-  "endDate": "2024-01-31T23:59:59",
-  "limit": 50
-}
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "message": "Invoice history retrieved successfully",
-  "data": [
-    {
-      "id": 1,
-      "invoiceNumber": "INV-001",
-      "orderId": 1,
-      "customerId": "LONEP",
-      "amount": 299.99,
-      "status": "PAID",
-      "invoiceDate": "2024-01-15T10:35:00",
-      "dueDate": "2024-02-15T10:35:00",
-      "paidDate": "2024-01-16T09:20:00"
-    }
-  ],
-  "count": 1
-}
-```
-
-### 3. Start Duplicate Charge Dispute
-**POST** `/api/finance/disputes/duplicate-charge`
-
-Create a new duplicate charge dispute for an order.
-
-**Request Body:**
-```json
-{
-  "customerId": "LONEP",
-  "orderId": 1,
-  "description": "Charged twice for the same order",
-  "reason": "Payment processor error caused duplicate charge"
-}
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "message": "Duplicate charge dispute started successfully",
-  "data": {
-    "id": 1,
-    "disputeNumber": "DISP-ABC12345",
-    "orderId": 1,
-    "customerId": "LONEP",
-    "disputeType": "DUPLICATE_CHARGE",
-    "status": "OPEN",
-    "description": "Charged twice for the same order",
-    "reason": "Payment processor error caused duplicate charge",
-    "disputeDate": "2024-01-22T14:30:00"
-  }
-}
-```
-
-### 4. Find Lost Receipt
-**POST** `/api/finance/receipts/find-lost`
-
-Find or create a lost receipt record for an order.
-
-**Request Body:**
-```json
-{
-  "customerId": "LONEP",
-  "orderId": 1
-}
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "message": "Lost receipt found/created successfully",
-  "data": {
-    "id": 1,
-    "receiptNumber": "RCPT-ABC12345",
-    "orderId": 1,
-    "customerId": "LONEP",
-    "status": "LOST",
-    "receiptDate": "2024-01-15T10:40:00"
-  }
-}
-```
-
-### 5. Health Check
-**GET** `/api/finance/health`
-
-Check the health status of the API.
-
-**Response:**
-```json
-{
-  "status": "UP",
-  "service": "Fantaco Finance API",
-  "timestamp": "2024-01-30T15:30:00"
-}
-```
 
 
-## Local Development
-
-### Prerequisites
-- Java 21
-- Maven 3.6+
-- PostgreSQL 12+
-
-### Setup Database
+### Postgres
 ```bash
-# Create database
 createdb fantaco_finance
+```
 
 ### Run Application
 ```bash
 # Build the project
 mvn clean package
+```
 
+## localhost
+
+### With Local PostgreSQL
+
+Ensure PostgreSQL is running and update `src/main/resources/application.properties`:
+
+```properties
+spring.datasource.url=jdbc:postgresql://localhost:5432/fantaco_finance
+spring.datasource.username=postgres
+spring.datasource.password=postgres
+```
+
+Run the application and test it locally (see curl commands below for other tests)
+
+```bash
 # Run the application
 mvn spring-boot:run
 ```
@@ -259,7 +118,7 @@ podman push quay.io/burrsutter/fantaco-finance-main:1.0.0
 oc new-project fantaco
 ```
 
-because I am using the docker.io postgres image
+IF using the docker.io postgres image
 
 ```bash
 oc adm policy add-scc-to-user anyuid -z default
@@ -305,16 +164,6 @@ curl $FIN_URL/api/finance/health
 
 
 ### 2. Get Order History
-```bash
-curl -sS -X POST $FIN_URL/api/finance/orders/history \
-  -H "Content-Type: application/json" \
-  -d '{
-    "customerId": "LONEP",
-    "startDate": "2024-01-20T00:00:00",
-    "endDate": "2024-06-31T23:59:59",
-    "limit": 10
-  }' | jq
-```
 
 ```bash
 curl -sS -X POST $FIN_URL/api/finance/orders/history \
@@ -324,6 +173,19 @@ curl -sS -X POST $FIN_URL/api/finance/orders/history \
     "limit": 10
   }' | jq
 ```
+
+
+```bash
+curl -sS -X POST $FIN_URL/api/finance/orders/history \
+  -H "Content-Type: application/json" \
+  -d '{
+    "customerId": "LONEP",
+    "startDate": "2024-01-20T00:00:00",
+    "endDate": "2024-06-30T23:59:59",
+    "limit": 10
+  }' | jq
+```
+
 
 
 ### 3. Get Invoice History
@@ -385,7 +247,7 @@ Sample data is automatically loaded on startup via `data.sql`.
 - `SPRING_PROFILES_ACTIVE`: Active Spring profile
 
 ### Application Properties
-Configuration is managed through `application.yml` with profiles for different environments.
+Configuration is managed through `application.properties` with profiles for different environments.
 
 ## Monitoring and Health Checks
 

@@ -1,16 +1,20 @@
+# Llama Stack Workshop Materials
 
 
-## Starting the Llama Stack Server
+## Starting the model server 
 
+For localhost development, use [Ollama](https://ollama.com/) or you can use a remote model server such as vLLM via Model-as-a-Service solution [MaaS](https://maas.apps.prod.rhoai.rh-aiservices-bu.com/admin/applications)
+s
 
 ```bash
 ollama serve
 ```
 
-Pull down your needed models
+Pull down your needed models.  For LLM tool invocations you ofte need a larger model such as Qwen 14B.  The way you know is to test your app/agent + model + model-server-configuration.
 
 ```bash
 ollama pull llama3.2:3b
+ollama pull qwen3:14b-q8_0
 ```
 
 ```bash
@@ -19,18 +23,9 @@ cd llama-stack-scripts
 
 
 ```bash
-export LLAMA_STACK_MODEL="meta-llama/Llama-3.2-3B-Instruct"
-export INFERENCE_MODEL="meta-llama/Llama-3.2-3B-Instruct"
-export LLAMA_STACK_PORT=8321
-export LLAMA_STACK_SERVER=http://localhost:$LLAMA_STACK_PORT
-```
-
-If using MaaS 
-
-```bash
-export VLLM_API_TOKEN=blah
-# https://maas.apps.prod.rhoai.rh-aiservices-bu.com/admin/applications
-export VLLM_URL=https://llama-4-scout-17b-16e-w4a16-maas-apicast-production.apps.prod.rhoai.rh-aiservices-bu.com:443/v1
+export LLAMA_STACK_BASE_URL=http://localhost:8321
+export INFERENCE_MODEL=ollama/llama3.2:3b
+# export INFERENCE_MODEL=vllm/llama-4-scout-17b-16e-w4a16
 ```
 
 If using Ollama
@@ -39,14 +34,24 @@ If using Ollama
 export OLLAMA_URL=http://localhost:11434 
 ```
 
+
+If using [MaaS](https://maas.apps.prod.rhoai.rh-aiservices-bu.com/admin/applications)
+
+```bash
+export VLLM_API_TOKEN=blah
+
+export VLLM_URL=https://llama-4-scout-17b-16e-w4a16-maas-apicast-production.apps.prod.rhoai.rh-aiservices-bu.com:443/v1
+```
+
+
 ```bash
 python3.13 -m venv .venv
 source .venv/bin/activate
 
-uv run python -v
+uv run python -V
 ```
 
-Install Deps 
+Install Dependencies 
 
 ```bash
 uv run --with llama-stack llama stack list-deps starter | xargs -L1 uv pip install
@@ -59,6 +64,8 @@ uv run --with llama-stack llama stack run starter
 ```
 
 Inspect the server by running the scripts in `llama-stack-scripts`
+
+
 
 ## Start Customer Backend
 
@@ -109,6 +116,7 @@ curl -sS -X POST $FIN_URL/api/finance/orders/history \
 
 ```bash
 cd fantaco-mcp-servers/customer-mcp
+source .venv/bin/activate
 ```
 
 ```bash
@@ -119,11 +127,16 @@ python customer-api-mcp-server.py
 
 ```bash
 cd fantaco-mcp-servers/finance-mcp
+source .venv/bin/activate
 ```
 
 ```bash
 python finance-api-mcp-server.py
 ```
 
-Using `mcp-inspector` to test
+Using `mcp-inspector` to test the MCP Servers
+
+## Simple Agent LangGraph
+
+Follow the `REAME.md` in `simple-agent-langgraph`
 

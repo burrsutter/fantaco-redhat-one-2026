@@ -10,9 +10,9 @@ spec:
     containerSpec:
       env:
       - name: VLLM_URL
-        value: "https://litellm-prod.apps.maas.redhatworkshops.io/v1"
+        value: "https://some_url/v1"
       - name: VLLM_API_TOKEN
-        value: "sk-M1BNtjw6bppawN5N7vg3tA"
+        value: "some_token"
     storage:
       size: "20Gi"
       mountPath: "/home/lls/.lls"

@@ -32,7 +32,6 @@ logger.info("  API Key: %s", "***" if API_KEY else "None")
 llm = ChatOpenAI(
     model=INFERENCE_MODEL,
     openai_api_key=API_KEY,
-    # base_url=f"{BASE_URL}/v1/openai/v1",
     base_url=f"{BASE_URL}/v1",
     use_responses_api=True
 )

@@ -24,7 +24,7 @@ BASE_URL = os.getenv("LLAMA_STACK_BASE_URL")
 INFERENCE_MODEL = os.getenv("INFERENCE_MODEL")
 API_KEY = os.getenv("API_KEY")
 FASTAPI_HOST = os.getenv("FASTAPI_HOST", "0.0.0.0")
-FASTAPI_PORT = int(os.getenv("FASTAPI_PORT", "8000"))
+FASTAPI_PORT = int(os.getenv("FASTAPI_PORT", "8001"))
 
 logger.info("Configuration loaded:")
 logger.info("  Base URL: %s", BASE_URL)

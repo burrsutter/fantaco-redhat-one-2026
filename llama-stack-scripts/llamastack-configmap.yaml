@@ -24,7 +24,7 @@ data:
       - provider_id: sentence-transformers
         provider_type: inline::sentence-transformers
         config: {}
-      - provider_id: vllm-inference-1
+      - provider_id: vllm
         provider_type: remote::vllm
         config:
           url: https://litellm-prod.apps.maas.redhatworkshops.io/v1
@@ -92,12 +92,6 @@ data:
       model_type: embedding
       metadata:
         embedding_dimension: 768
-    - provider_id: vllm-inference-1
-      model_id: llama-32-3b-instruct
-      model_type: llm
-      metadata:
-        description: ""
-        display_name: llama-32-3b-instruct
     shields: []
     vector_dbs: []
     datasets: []

@@ -23,7 +23,9 @@ spec:
           value: 'http://localhost'
         - name: VLLM_MAX_TOKENS
           value: '4096'
-        - name: VLLM_API_TOKEN_1
+        - name: VLLM_API_URL
+          value: 'https://litellm-prod.apps.maas.redhatworkshops.io/v1'
+        - name: VLLM_API_TOKEN
           value: 'your_token'
         - name: LLAMA_STACK_CONFIG_DIR
           value: /opt/app-root/src/.llama/distributions/rh/

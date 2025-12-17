@@ -27,10 +27,10 @@ data:
       - provider_id: vllm
         provider_type: remote::vllm
         config:
-          url: https://litellm-prod.apps.maas.redhatworkshops.io/v1
-          api_token: ${env.VLLM_API_TOKEN_1:=fake}
-          tls_verify: false
-          max_tokens: 4096
+          url: ${env.VLLM_API_URL:=https://litellm-prod.apps.maas.redhatworkshops.io/v1}
+          api_token: ${env.VLLM_API_TOKEN:=fake}
+          tls_verify: ${env.VLLM_TLS_VERIFY:=false}
+          max_tokens: ${env.VLLM_MAX_TOKENS:=4096}
       vector_io:
       - provider_id: milvus
         provider_type: inline::milvus

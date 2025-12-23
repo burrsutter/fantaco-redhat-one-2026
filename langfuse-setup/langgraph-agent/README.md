@@ -51,6 +51,61 @@ curl -X POST http://localhost:8002/api/v1/chat \
 }'
 ```
 
+#### Test Standalone FastAPI Server (6-langgraph-langfuse-fastapi.py)
+
+The backend also includes a standalone FastAPI server that integrates with MCP servers:
+
+**Start the server:**
+```bash
+cd backend
+python 6-langgraph-langfuse-fastapi.py
+```
+
+**Health Check:**
+```bash
+curl -s http://localhost:8002/health | python -m json.tool
+```
+
+**Root Endpoint (API Info):**
+```bash
+curl -s http://localhost:8002/ | python -m json.tool
+```
+
+**Chat Endpoint - Simple Query:**
+```bash
+curl -X POST http://localhost:8002/chat \
+  -H "Content-Type: application/json" \
+  -d '{"message": "Who is Thomas Hardy?", "session_id": "test-session-123", "user_id": "test-user"}'
+```
+
+**Chat Endpoint - Complex Query with Orders:**
+```bash
+curl -X POST http://localhost:8002/chat \
+  -H "Content-Type: application/json" \
+  -d "{\"message\": \"What are the orders for Thomas Hardy?\", \"session_id\": \"session-456\", \"user_id\": \"admin\"}"
+```
+
+**Chat Endpoint - Search by Company:**
+```bash
+curl -X POST http://localhost:8002/chat \
+  -H "Content-Type: application/json" \
+  -d '{"message": "Find orders for Lonesome Pine Restaurant", "session_id": "demo-session"}'
+```
+
+**Expected Response Format:**
+```json
+{
+  "reply": "Thomas Hardy is a Sales Representative at Around the Horn...",
+  "tool_result": null,
+  "trace_id": "019b4ccc-fa59-7fa2-a56e-854d0fafbfda"
+}
+```
+
+The `trace_id` can be used to view the full trace in Langfuse at:
+```
+http://localhost:3000/trace/{trace_id}
+```
+
 ### 2. Setup Frontend
 
 ```bash

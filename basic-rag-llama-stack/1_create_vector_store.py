@@ -3,34 +3,6 @@ import requests
 from dotenv import load_dotenv
 from llama_stack_client import LlamaStackClient
 from io import BytesIO
-from html.parser import HTMLParser
-
-class HTMLTextExtractor(HTMLParser):
-    def __init__(self):
-        super().__init__()
-        self.text = []
-        self.skip_tags = set()  # Track tags we're currently inside
-
-    def handle_starttag(self, tag, attrs):
-        if tag in ['style', 'script']:
-            self.skip_tags.add(tag)
-
-    def handle_endtag(self, tag):
-        self.skip_tags.discard(tag)
-        # Add newlines after block-level elements to preserve structure
-        if tag in ['p', 'div', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'li', 'br', 'tr', 'table']:
-            self.text.append('\n\n')
-
-    def handle_data(self, data):
-        # Only add text if we're not inside style or script tags
-        if not self.skip_tags:
-            # Clean up whitespace but preserve words
-            cleaned = ' '.join(data.split())
-            if cleaned:
-                self.text.append(cleaned)
-
-    def get_text(self):
-        return ''.join(self.text)
 
 # Load environment variables
 load_dotenv()
@@ -54,25 +26,20 @@ vs = client.vector_stores.create(
 )
 print(f"Vector store created: {vs.id}")
 
-# Download and clean HTML
-url = "https://raw.githubusercontent.com/burrsutter/fantaco-redhat-one-2026/main/naive-rag-llama-stack/source_docs/FantaCoFabulousHRBenefits.html"
-print(f"Downloading HTML from {url}...")
+# Download clean text file
+url = "https://raw.githubusercontent.com/burrsutter/fantaco-redhat-one-2026/refs/heads/main/basic-rag-llama-stack/source_docs/FantaCoFabulousHRBenefits_clean.txt"
+print(f"Downloading text file from {url}...")
 response = requests.get(url)
+text_content = response.text
 
-# Extract text content only (no HTML/CSS)
-print("Extracting text from HTML...")
-parser = HTMLTextExtractor()
-parser.feed(response.text)
-text_content = parser.get_text()
+print(f"Downloaded {len(text_content)} characters of text")
 
-print(f"Extracted {len(text_content)} characters of clean text")
-
-# Save the extracted text to source_docs folder for inspection
+# Save the text to source_docs folder for inspection
 source_docs_path = os.path.join(os.path.dirname(__file__), "source_docs", "FantaCoFabulousHRBenefits_clean.txt")
 os.makedirs(os.path.dirname(source_docs_path), exist_ok=True)
 with open(source_docs_path, 'w', encoding='utf-8') as f:
     f.write(text_content)
-print(f"Saved clean text to: {source_docs_path}")
+print(f"Saved text to: {source_docs_path}")
 
 # Upload as text file
 text_buffer = BytesIO(text_content.encode('utf-8'))

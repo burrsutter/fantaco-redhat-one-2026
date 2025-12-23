@@ -147,6 +147,7 @@ In the Langfuse UI:
 	2.	Create Project
 	3.	Go to: Project -> Settings -> API Keys
 
+See [screenshots.md](screenshots.md)
 
 
 ### Postgres

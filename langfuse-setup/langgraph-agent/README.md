@@ -45,7 +45,7 @@ The backend will start on `http://localhost:8002`
 curl -X POST http://localhost:8002/api/v1/chat \
 -H "Content-Type: application/json" \
 -d '{
-    "message": "Hello, how are you?",
+    "message": "who does Thomas Hardy work for?",
     "user_id": "test-user",
     "session_id": "test-session-123"
 }'

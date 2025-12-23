@@ -149,4 +149,47 @@ In the Langfuse UI:
 
 
 
+### Postgres
 
+```bash
+psql -h localhost -p 5432 -U postgres -d postgres
+```
+
+```psql
+\l
+```
+
+```
+                                 List of databases
+   Name    |  Owner   | Encoding |  Collate   |   Ctype    |   Access privileges
+-----------+----------+----------+------------+------------+-----------------------
+ postgres  | postgres | UTF8     | en_US.utf8 | en_US.utf8 |
+ template0 | postgres | UTF8     | en_US.utf8 | en_US.utf8 | =c/postgres          +
+           |          |          |            |            | postgres=CTc/postgres
+ template1 | postgres | UTF8     | en_US.utf8 | en_US.utf8 | =c/postgres          +
+           |          |          |            |            | postgres=CTc/postgres
+(3 rows)
+```
+
+```psql
+CREATE DATABASE fantaco_customer;
+CREATE DATABASE fantaco_finance;
+```
+
+```psql
+\l
+```
+
+```
+                                    List of databases
+       Name       |  Owner   | Encoding |  Collate   |   Ctype    |   Access privileges
+------------------+----------+----------+------------+------------+-----------------------
+ fantaco_customer | postgres | UTF8     | en_US.utf8 | en_US.utf8 |
+ fantaco_finance  | postgres | UTF8     | en_US.utf8 | en_US.utf8 |
+ postgres         | postgres | UTF8     | en_US.utf8 | en_US.utf8 |
+ template0        | postgres | UTF8     | en_US.utf8 | en_US.utf8 | =c/postgres          +
+                  |          |          |            |            | postgres=CTc/postgres
+ template1        | postgres | UTF8     | en_US.utf8 | en_US.utf8 | =c/postgres          +
+                  |          |          |            |            | postgres=CTc/postgres
+(5 rows)
+```

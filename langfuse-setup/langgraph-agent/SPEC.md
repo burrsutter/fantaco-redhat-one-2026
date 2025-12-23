@@ -79,6 +79,7 @@ langfuse==3.11.0
 pydantic==2.10.3
 pydantic-settings==2.7.0
 python-dotenv==1.0.1
+httpx==0.27.0
 ```
 
 ### 3. Environment Configuration
@@ -98,6 +99,10 @@ BASE_URL=https://api.openai.com/v1
 LANGFUSE_PUBLIC_KEY=pk-lf-xxx
 LANGFUSE_SECRET_KEY=sk-lf-xxx
 LANGFUSE_BASE_URL=https://cloud.langfuse.com
+
+# MCP Server Configuration
+CUSTOMER_MCP_SERVER_URL=http://localhost:9001/mcp
+FINANCE_MCP_SERVER_URL=http://localhost:9002/mcp
 
 # Application Configuration
 PORT=8002

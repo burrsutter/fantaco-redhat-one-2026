@@ -1,6 +1,11 @@
 import os
+import logging
 from dotenv import load_dotenv
 from llama_stack_client import LlamaStackClient
+
+# Suppress httpx and llama_stack_client INFO logs
+logging.getLogger("httpx").setLevel(logging.WARNING)
+logging.getLogger("llama_stack_client").setLevel(logging.WARNING)
 
 load_dotenv()
 
@@ -19,6 +24,17 @@ if not vector_store:
 print(f"Vector Store: {vector_store.id}")
 print(f"Name: {vector_store.name}")
 print(f"Created: {vector_store.created_at}")
+
+# Check file status
+print("\nChecking files in vector store...")
+files = list(client.vector_stores.files.list(vector_store_id=vector_store.id))
+print(f"Total files: {len(files)}")
+for f in files:
+    print(f"  File ID: {f.id}")
+    print(f"  Status: {f.status}")
+    if hasattr(f, 'last_error') and f.last_error:
+        print(f"  Error: {f.last_error}")
+
 print("-" * 80)
 
 # Test different queries and see what gets retrieved

@@ -1,6 +1,11 @@
 import os
+import logging
 from dotenv import load_dotenv
 from llama_stack_client import LlamaStackClient, Agent, AgentEventLogger
+
+# Suppress httpx and llama_stack_client INFO logs
+logging.getLogger("httpx").setLevel(logging.WARNING)
+logging.getLogger("llama_stack_client").setLevel(logging.WARNING)
 
 # Load environment variables
 load_dotenv()
@@ -32,9 +37,9 @@ print("-" * 80)
 # Define the query
 query = "What do I receive when I retire?"
 
-print(f"Query: {query}\n")
-print("Agent Response:")
+print(f"Query: {query}")
 print("-" * 80)
+
 
 # Create agent with file_search tool for RAG
 agent = Agent(

@@ -1,6 +1,11 @@
 import os
+import logging
 from dotenv import load_dotenv
 from llama_stack_client import LlamaStackClient
+
+# Suppress httpx and llama_stack_client INFO logs
+logging.getLogger("httpx").setLevel(logging.WARNING)
+logging.getLogger("llama_stack_client").setLevel(logging.WARNING)
 
 # Load environment variables
 load_dotenv()

@@ -27,8 +27,10 @@ print(f"Using vector store: {vector_store.id}\n")
 # Try queries with unique terms from the retirement section
 queries = [
     "Tell me about the chocolate statue and personal bard",
-    "What do I get instead of a gold watch when I retire",
     "Tell me about the 401k and astrological alignment",
+    "where might I try a marathon?",
+    "What does the office griffin eat?",
+    "What languages must employees learn?",
 ]
 
 for query in queries:

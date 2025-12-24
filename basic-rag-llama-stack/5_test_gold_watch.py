@@ -1,6 +1,11 @@
 import os
+import logging
 from dotenv import load_dotenv
 from llama_stack_client import LlamaStackClient, Agent, AgentEventLogger
+
+# Suppress httpx and llama_stack_client INFO logs
+logging.getLogger("httpx").setLevel(logging.WARNING)
+logging.getLogger("llama_stack_client").setLevel(logging.WARNING)
 
 # Load environment variables
 load_dotenv()
@@ -31,8 +36,7 @@ queries = [
 ]
 
 for query in queries:
-    print(f"\nQuery: {query}")
-    print("Agent Response:")
+    print(f"Query: {query}")
     print("-" * 80)
 
     agent = Agent(

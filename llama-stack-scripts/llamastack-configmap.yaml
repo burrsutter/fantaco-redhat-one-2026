@@ -68,10 +68,13 @@ data:
             db_path: /opt/app-root/src/.llama/distributions/rh/huggingface_datasetio.db
             namespace: null
             type: sqlite
-      safety:
-      - provider_id: llama-guard
-        provider_type: inline::llama-guard
-        config: {}
+      - provider_id: localfs
+        provider_type: inline::localfs
+        config:
+          kvstore:
+            db_path: /opt/app-root/src/.llama/distributions/rh/localfs_datasetio.db
+            namespace: null
+            type: sqlite
       scoring:
       - provider_id: basic
         provider_type: inline::basic

@@ -46,7 +46,7 @@ def main():
     try:
         client.benchmarks.register(
             benchmark_id="my-basic-quality-benchmark",
-            dataset_id="basic-equality-evals",
+            dataset_id="basic-subset-of-evals",
             scoring_functions=["basic::subset_of"]
         )
     except NotFoundError as exc:

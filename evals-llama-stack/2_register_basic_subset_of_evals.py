@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Register datasets/basic-equality-evals.csv with a Llama Stack server.
+Register datasets/basic-subset-of-evals.csv with a Llama Stack server.
 """
 
 import logging

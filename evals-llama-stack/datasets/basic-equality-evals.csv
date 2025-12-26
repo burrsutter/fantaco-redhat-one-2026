@@ -1,4 +1,4 @@
-question,answer
+input_query,expected_answer
 What is 2+2?,4
 What color is the sky?,blue
 Who wrote Romeo and Juliet?,Shakespeare

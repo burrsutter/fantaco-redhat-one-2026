@@ -57,8 +57,9 @@ data:
         provider_type: inline::meta-reference
         config:
           kvstore:
-            namespace: eval
-            backend: kv_default
+            db_path: /opt/app-root/src/.llama/distributions/rh/eval_store.db
+            namespace: null
+            type: sqlite
       files:
       - provider_id: meta-reference-files
         provider_type: inline::localfs

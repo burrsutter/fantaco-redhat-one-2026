@@ -52,7 +52,13 @@ data:
           responses_store:
             db_path: /opt/app-root/src/.llama/distributions/rh/responses_store.db
             type: sqlite
-      eval: []
+      eval:
+      - provider_id: meta-reference
+        provider_type: inline::meta-reference
+        config:
+          kvstore:
+            namespace: eval
+            backend: kv_default
       files:
       - provider_id: meta-reference-files
         provider_type: inline::localfs

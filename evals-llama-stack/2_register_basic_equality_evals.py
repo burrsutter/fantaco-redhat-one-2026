@@ -23,7 +23,7 @@ logging.getLogger("httpx").setLevel(logging.WARNING)
 logging.getLogger("llama_stack_client").setLevel(logging.WARNING)
 
 DATASET_ID = "basic-equality-evals"
-DEFAULT_DATASET_URL = (
+DEFAULT_DATASET_URI = (
     "https://raw.githubusercontent.com/burrsutter/fantaco-redhat-one-2026/main/"
     "evals-llama-stack/datasets/basic-equality-evals.csv"
 )
@@ -39,9 +39,9 @@ def main():
         sys.exit(1)
 
 
-    dataset_url = os.getenv("LLAMA_STACK_DATASET_URL", DEFAULT_DATASET_URL)
-    if not dataset_url:
-        logger.error("LLAMA_STACK_DATASET_URL environment variable is not set")
+    dataset_uri = os.getenv("LLAMA_STACK_DATASET_URI", DEFAULT_DATASET_URI)
+    if not dataset_uri:
+        logger.error("LLAMA_STACK_DATASET_URI environment variable is not set")
         sys.exit(1)
 
     provider_id = os.getenv("LLAMA_STACK_DATASET_PROVIDER_ID", "localfs")
@@ -58,7 +58,7 @@ def main():
             purpose="eval/question-answer",
             source={
                 "type": "uri",
-                "uri": dataset_url,
+                "uri": dataset_uri,
             },
             dataset_id=DATASET_ID,
             extra_body={"provider_id": provider_id},

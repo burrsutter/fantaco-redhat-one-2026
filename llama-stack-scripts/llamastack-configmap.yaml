@@ -13,6 +13,7 @@ data:
     apis:
     - agents
     - datasetio
+    - eval
     - files
     - inference
     - safety

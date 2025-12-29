@@ -50,25 +50,31 @@ def main():
         logger.error(f"Failed to fetch eval job result: {exc}")
         sys.exit(1)
 
-    if not result or not result.scores:
+    if not result:
+        logger.warning("No result returned for this job")
+        return
+
+    
+    if not result.scores:
         logger.warning("No scores returned for this job")
         return
 
     logger.info("Scores:")
     for scoring_fn_id, scoring_result in result.scores.items():
         print(f"  Scoring Function: {scoring_fn_id}")
+        
         if scoring_result.aggregated_results:
-            print(f"    Aggregated: {scoring_result.aggregated_results}")
+            print(f"  Aggregated: {scoring_result.aggregated_results}")
         if scoring_result.score_rows:
-            print(f"    Rows: {len(scoring_result.score_rows)}")
+            print(f"  Rows: {len(scoring_result.score_rows)}")
             for index, row in enumerate(scoring_result.score_rows, start=1):
                 generation = None
                 if result.generations and index - 1 < len(result.generations):
                     generation = result.generations[index - 1]
                 if generation:
-                    print(f"      Row {index}: {row} | Generation: {generation}")
+                    print(f"   Row {index}: {row} | Generation: {generation}")
                 else:
-                    print(f"      Row {index}: {row}")
+                    print(f"   Row {index}: {row}")
         print()
 
 

@@ -39,8 +39,9 @@ def main():
 
     benchmark_id = os.getenv("LLAMA_STACK_BENCHMARK_ID", "my-basic-quality-benchmark")
 
-    logger.info(f"Connecting to Llama Stack server at: {base_url}")
+    logger.info(f"Connecting to Llama Stack server at: {base_url}")    
     logger.info(f"Running eval for benchmark: {benchmark_id}")
+    logger.info(f"Using candidate model: {model_id}")
 
     # Create the Llama Stack client
     client = LlamaStackClient(base_url=base_url)

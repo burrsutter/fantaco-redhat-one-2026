@@ -13,7 +13,8 @@ from langgraph.graph import StateGraph, END
 from langchain_mcp_adapters.client import MultiServerMCPClient
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import HumanMessage, AIMessage, SystemMessage, ToolMessage
-from langfuse.callback.langchain import LangchainCallbackHandler as CallbackHandler
+from langfuse.langchain import CallbackHandler
+from langfuse import get_client
 
 # Load environment variables
 load_dotenv()
@@ -115,20 +116,8 @@ app.add_middleware(
 async def process_chat(message: str, session_id: Optional[str] = None, user_id: Optional[str] = None) -> tuple[str, Optional[str]]:
     """Process a chat message and return the response with trace ID"""
 
-    # Initialize Langfuse CallbackHandler
-    langfuse_handler = CallbackHandler(
-        public_key=os.getenv("LANGFUSE_PUBLIC_KEY"),
-        secret_key=os.getenv("LANGFUSE_SECRET_KEY"),
-        host=os.getenv("LANGFUSE_BASE_URL"),
-        session_id=session_id or f"session-{datetime.now().strftime('%Y%m%d-%H%M%S')}",
-        user_id=user_id or "api_user",
-        tags=["mcp", "langgraph", "customer-service", "fastapi"],
-        metadata={
-            "query": message,
-            "session_id": session_id,
-            "user_id": user_id
-        }
-    )
+    # Initialize Langfuse CallbackHandler (uses LANGFUSE_PUBLIC_KEY, LANGFUSE_SECRET_KEY, LANGFUSE_HOST env vars)
+    langfuse_handler = CallbackHandler()
 
     logger.info(f"Processing message: {message[:50]}... (Session: {session_id}, User: {user_id})")
 
@@ -263,9 +252,9 @@ Be concise and helpful.""")
                 break
 
     # Flush Langfuse to ensure all data is sent
-    langfuse_handler.flush()
+    get_client().flush()
 
-    trace_id = langfuse_handler.get_trace_id()
+    trace_id = langfuse_handler.last_trace_id
     logger.info(f"Request processed. Trace ID: {trace_id}")
 
     return final_response, trace_id

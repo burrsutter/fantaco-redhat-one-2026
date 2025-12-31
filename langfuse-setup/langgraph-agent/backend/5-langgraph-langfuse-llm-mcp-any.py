@@ -11,7 +11,8 @@ from langgraph.graph import StateGraph, END
 from langchain_mcp_adapters.client import MultiServerMCPClient
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import HumanMessage, AIMessage, SystemMessage, ToolMessage
-from langfuse.callback.langchain import LangchainCallbackHandler as CallbackHandler
+from langfuse.langchain import CallbackHandler
+from langfuse import get_client
 
 # Load environment variables
 load_dotenv()
@@ -32,21 +33,10 @@ class State(TypedDict):
 
 
 async def main(user_query: str):
-    # Initialize Langfuse CallbackHandler
-    langfuse_handler = CallbackHandler(
-        public_key=os.getenv("LANGFUSE_PUBLIC_KEY"),
-        secret_key=os.getenv("LANGFUSE_SECRET_KEY"),
-        host=os.getenv("LANGFUSE_BASE_URL"),
-        session_id=f"session-{datetime.now().strftime('%Y%m%d-%H%M%S')}",
-        user_id="cli_user",
-        tags=["mcp", "langgraph", "customer-service"],
-        metadata={
-            "query": user_query
-        }
-    )
+    # Initialize Langfuse CallbackHandler (uses LANGFUSE_PUBLIC_KEY, LANGFUSE_SECRET_KEY, LANGFUSE_HOST env vars)
+    langfuse_handler = CallbackHandler()
 
-    logger.info(f"Langfuse enabled: {os.getenv('LANGFUSE_BASE_URL')}")
-    logger.info(f"Session ID: {langfuse_handler.get_trace_id()}")
+    logger.info(f"Langfuse enabled: {os.getenv('LANGFUSE_HOST')}")
 
     # Connect to both MCP servers
     customer_mcp = MultiServerMCPClient(
@@ -213,9 +203,9 @@ Be concise and helpful.""")
     logger.info("="*70)
 
     # Flush Langfuse to ensure all data is sent
-    langfuse_handler.flush()
+    get_client().flush()
 
-    trace_url = f"{os.getenv('LANGFUSE_BASE_URL')}/trace/{langfuse_handler.get_trace_id()}"
+    trace_url = f"{os.getenv('LANGFUSE_HOST')}/trace/{langfuse_handler.last_trace_id}"
     logger.info(f"✓ Trace logged to Langfuse: {trace_url}")
 
 

@@ -32,20 +32,20 @@ def main():
         logger.error("LLAMA_STACK_BASE_URL environment variable is not set")
         sys.exit(1)
 
-    model = os.getenv("INFERENCE_MODEL")
+    model = os.getenv("CANDIDATE_MODEL")
     if not model:
-        logger.error("INFERENCE_MODEL environment variable is not set")
+        logger.error("CANDIDATE_MODEL environment variable is not set")
         sys.exit(1)
-    
+
     logger.info(f"Connecting to Llama Stack server at: {base_url}")
     logger.info(f"Using model: {model}")
 
     # Create the Llama Stack client
     client = LlamaStackClient(base_url=base_url)
 
-    questions = [        
+    questions = [
         # "What color is the sky?",
-        # "Who wrote Romeo and Juliet?",        
+        # "Who wrote Romeo and Juliet?",
         "Sally's mother has 4 children: Spring, Summer, Fall, and ____. What is the fourth child's name?",
         "A farmer has 17 sheep. All but 9 run away. How many sheep does the farmer have left?",
         "A bat and a ball cost $1.10 in total. The bat costs $1.00 more than the ball. How much does the ball cost?",

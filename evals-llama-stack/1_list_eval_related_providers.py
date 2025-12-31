@@ -46,8 +46,8 @@ def main():
         return
 
     eval_providers = [p for p in providers if p.api == "eval"]
-    benchmark_providers = [p for p in providers if p.api == "benchmarks"]
-    dataset_providers = [provider for provider in providers if provider.api == "datasetio"]
+    dataset_providers = [p for p in providers if p.api == "datasetio"]
+    scoring_providers = [p for p in providers if p.api == "scoring"]
 
     
     if dataset_providers:
@@ -70,15 +70,15 @@ def main():
     else:
         logger.warning("No eval providers found (api=eval)")
 
-    if benchmark_providers:
-        logger.info(f"Found {len(benchmark_providers)} Benchmark provider(s):\n")
-        for p in benchmark_providers:
+    if scoring_providers:
+        logger.info(f"Found {len(scoring_providers)} Scoring provider(s):\n")
+        for p in scoring_providers:
             print(f"  Provider ID: {p.provider_id}")
             print(f"    Type: {p.provider_type}")
             print(f"    API: {p.api}")
             print()
     else:
-        logger.warning("No benchmark providers found (api=benchmarks)")
+        logger.warning("No scoring providers found (api=scoring)")
 
 
 if __name__ == "__main__":

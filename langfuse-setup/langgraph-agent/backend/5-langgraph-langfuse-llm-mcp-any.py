@@ -11,7 +11,7 @@ from langgraph.graph import StateGraph, END
 from langchain_mcp_adapters.client import MultiServerMCPClient
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import HumanMessage, AIMessage, SystemMessage, ToolMessage
-from langfuse.callback import CallbackHandler
+from langfuse.callback.langchain import LangchainCallbackHandler as CallbackHandler
 
 # Load environment variables
 load_dotenv()

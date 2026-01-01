@@ -12,6 +12,6 @@ langchain-openai==1.1.0
 
 # FastAPI
 fastapi==0.115.5
-uvicorn==0.34.0
-pydantic==2.10.3
+uvicorn>=0.35.0
+pydantic>=2.11.5
 email-validator==2.2.0

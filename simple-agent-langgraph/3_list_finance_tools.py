@@ -5,11 +5,8 @@ import logging
 
 load_dotenv()
 
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
+# Suppress noisy httpx logging
+logging.getLogger("httpx").setLevel(logging.WARNING)
 
 BASE_URL = os.getenv("LLAMA_STACK_BASE_URL")
 API_KEY = os.getenv("LLAMA_STACK_API_KEY")
@@ -24,71 +21,49 @@ client = Client(
 def list_finance_tools():
     """List all tools available in the finance MCP server"""
 
-    logger.info("=" * 50)
-    logger.info("Finance MCP Server Tools")
-    logger.info("=" * 50)
-    logger.info("MCP Server URL: %s", FINANCE_MCP_SERVER_URL)
-    logger.info("")
+    print("=" * 50)
+    print("Finance MCP Server Tools")
+    print("=" * 50)
+    print(f"MCP Server URL: {FINANCE_MCP_SERVER_URL}\n")
 
     try:
-        # List all tools and filter for finance_mcp toolgroup
         all_tools = client.tools.list()
-
-        # Filter tools that belong to finance_mcp toolgroup
         finance_tools = [tool for tool in all_tools if hasattr(tool, 'toolgroup_id') and tool.toolgroup_id == 'finance_mcp']
 
         if finance_tools:
             for tool in finance_tools:
-                # Get the full tool object to inspect
                 tool_dict = tool.model_dump() if hasattr(tool, 'model_dump') else vars(tool)
-
                 tool_name = tool_dict.get('tool_name') or tool_dict.get('name') or tool_dict.get('identifier') or 'N/A'
 
-                logger.info("Tool Name: %s", tool_name)
-                logger.info("Description: %s", tool.description if hasattr(tool, 'description') else 'N/A')
-                logger.info("Toolgroup ID: %s", tool.toolgroup_id if hasattr(tool, 'toolgroup_id') else 'N/A')
+                print(f"Tool Name:    {tool_name}")
+                print(f"Description:  {tool.description if hasattr(tool, 'description') else 'N/A'}")
 
-                if hasattr(tool, 'parameters'):
-                    logger.info("Parameters:")
-                    params = tool.parameters
-                    if hasattr(params, 'properties'):
-                        for param_name, param_info in params.properties.items():
-                            param_desc = param_info.get('description', 'No description') if isinstance(param_info, dict) else getattr(param_info, 'description', 'No description')
-                            param_type = param_info.get('type', 'any') if isinstance(param_info, dict) else getattr(param_info, 'type', 'any')
-                            param_required = param_name in getattr(params, 'required', [])
-                            logger.info("  - %s (%s)%s: %s", param_name, param_type, ' [required]' if param_required else '', param_desc)
-                elif hasattr(tool, 'input_schema'):
-                    logger.info("Parameters:")
-                    schema = tool.input_schema
-                    if hasattr(schema, 'properties'):
-                        for param_name, param_info in schema.properties.items():
-                            param_desc = param_info.get('description', 'No description') if isinstance(param_info, dict) else getattr(param_info, 'description', 'No description')
-                            param_type = param_info.get('type', 'any') if isinstance(param_info, dict) else getattr(param_info, 'type', 'any')
-                            param_required = param_name in getattr(schema, 'required', [])
-                            logger.info("  - %s (%s)%s: %s", param_name, param_type, ' [required]' if param_required else '', param_desc)
+                params = getattr(tool, 'parameters', None) or getattr(tool, 'input_schema', None)
+                if params and hasattr(params, 'properties'):
+                    print("Parameters:")
+                    for param_name, param_info in params.properties.items():
+                        param_desc = param_info.get('description', '') if isinstance(param_info, dict) else getattr(param_info, 'description', '')
+                        param_type = param_info.get('type', 'any') if isinstance(param_info, dict) else getattr(param_info, 'type', 'any')
+                        param_required = param_name in getattr(params, 'required', [])
+                        req_marker = ' [required]' if param_required else ''
+                        print(f"  - {param_name} ({param_type}){req_marker}: {param_desc}")
 
-                logger.info("-" * 50)
+                print("-" * 50)
 
-            logger.info("=" * 50)
-            logger.info("Total tools: %d", len(finance_tools))
-            logger.info("=" * 50)
-
+            print(f"\nTotal tools: {len(finance_tools)}")
+            print("=" * 50)
             return finance_tools
         else:
-            logger.warning("No tools found for finance_mcp toolgroup")
-
-            # Show all available tools for debugging
-            logger.info("All available tools:")
+            print("No tools found for finance_mcp toolgroup")
+            print("\nAll available tools:")
             for tool in all_tools:
-                logger.info("  - %s (toolgroup: %s)",
-                           tool.tool_name if hasattr(tool, 'tool_name') else 'N/A',
-                           tool.toolgroup_id if hasattr(tool, 'toolgroup_id') else 'N/A')
-
+                name = tool.tool_name if hasattr(tool, 'tool_name') else 'N/A'
+                group = tool.toolgroup_id if hasattr(tool, 'toolgroup_id') else 'N/A'
+                print(f"  - {name} (toolgroup: {group})")
             return []
 
     except Exception as e:
-        logger.error("Error fetching finance tools: %s", str(e))
-        logger.exception("Stack trace:")
+        print(f"\nError: {str(e)}")
         return []
 
 

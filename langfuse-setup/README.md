@@ -203,8 +203,23 @@ You need to update the values-openshift.yaml
 ```
   langfuse:
     nextauth:
-      url: "http://<YOUR-ROUTE-URL>"
+      url: "PLACEHOLDER_URL"
 ```
+
+
+MacOS
+
+```bash
+sed -i '' "s|PLACEHOLDER_URL|$LANGFUSE_URL|g" values-openshift.yaml
+```
+
+Linux
+
+```bash
+sed -i "s|PLACEHOLDER_URL|$LANGFUSE_URL|g" values-openshift.yaml
+```
+
+Update the deployment
 
 ```bash
 helm upgrade langfuse langfuse/langfuse -n langfuse -f values-openshift.yaml

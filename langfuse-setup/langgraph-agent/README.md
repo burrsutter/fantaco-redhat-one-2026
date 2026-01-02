@@ -33,7 +33,6 @@ The LANGFUSE values come from navigating the Langfuse UI (see [screenshots](../s
 
 
 
-
 **Note: LANGFUSE_BASE_URL is now *LANGFUSE_HOST***
 
 ```bash

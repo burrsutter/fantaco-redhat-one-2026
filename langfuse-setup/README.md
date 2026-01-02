@@ -198,7 +198,7 @@ export LANGFUSE_URL="http://$(oc get route -l app.kubernetes.io/name=langfuse -o
 echo $LANGFUSE_URL
 ```
 
-You need to update the values-openshift.yaml
+You need to update the values-openshift.yaml otherwise the sign-up login process will redirect to the incorrect URL (e.g. localhost:3000)
 
 ```
   langfuse:
@@ -245,7 +245,7 @@ In the Langfuse UI:
 See [screenshots.md](screenshots.md)
 
 
-### Postgres Setup for FantaCo
+### Postgres Setup for FantaCo if needed
 
 ```bash
 psql -h localhost -p 5432 -U postgres -d postgres

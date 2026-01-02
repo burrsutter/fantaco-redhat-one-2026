@@ -3,6 +3,7 @@ import logging
 from typing import TypedDict, Any, List, Literal, Optional
 from datetime import datetime
 from contextlib import asynccontextmanager
+from dataclasses import asdict
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
@@ -10,6 +11,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 import pathlib
+
+from evaluation import run_evaluation, sync_to_langfuse, load_local_test_cases
 
 from langgraph.graph import StateGraph, END
 from langchain_mcp_adapters.client import MultiServerMCPClient
@@ -40,6 +43,50 @@ class ChatResponse(BaseModel):
     reply: str
     tool_result: Any = None
     trace_id: Optional[str] = None
+
+
+# Evaluation API models
+class EvaluationRequest(BaseModel):
+    run_name: Optional[str] = None
+    sync_dataset: bool = True
+    record_to_langfuse: bool = True
+
+
+class TestCaseResultResponse(BaseModel):
+    test_id: str
+    test_name: str
+    passed: bool
+    score: float
+    response: str
+    trace_id: Optional[str]
+    matched_keywords: List[str]
+    missing_keywords: List[str]
+    details: str
+    duration_ms: float
+
+
+class EvaluationResponse(BaseModel):
+    run_name: str
+    timestamp: str
+    dataset_name: str
+    total_tests: int
+    passed: int
+    failed: int
+    pass_rate: float
+    average_score: float
+    duration_ms: float
+    results: List[TestCaseResultResponse]
+
+
+class SyncDatasetRequest(BaseModel):
+    force_recreate: bool = False
+
+
+class SyncDatasetResponse(BaseModel):
+    dataset_name: str
+    items_synced: int
+    total_items: int
+    version: str
 
 
 # LangGraph State
@@ -329,6 +376,112 @@ async def chat(request: ChatRequest):
 
     except Exception as e:
         logger.error(f"Error processing chat request: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/evaluate", response_model=EvaluationResponse)
+async def run_evaluation_endpoint(request: EvaluationRequest):
+    """
+    Run evaluation against all test cases in the local dataset.
+
+    - Optionally syncs local JSON to Langfuse dataset first
+    - Executes each test case through process_chat
+    - Scores responses using substring matching
+    - Records results to Langfuse
+
+    Returns detailed results for each test case and overall metrics.
+    """
+    # Path to test cases file
+    test_cases_path = pathlib.Path(__file__).parent / "data" / "eval_test_cases.csv"
+
+    if not test_cases_path.exists():
+        raise HTTPException(
+            status_code=404,
+            detail=f"Test cases file not found: {test_cases_path}"
+        )
+
+    try:
+        # Optionally sync to Langfuse first
+        if request.sync_dataset:
+            logger.info("Syncing test cases to Langfuse dataset...")
+            sync_result = sync_to_langfuse(str(test_cases_path))
+            logger.info(f"Synced {sync_result['items_synced']} items to {sync_result['dataset_name']}")
+
+        # Run evaluation
+        logger.info(f"Starting evaluation run: {request.run_name or 'auto-generated'}")
+        result = await run_evaluation(
+            test_cases_path=str(test_cases_path),
+            process_chat_fn=process_chat,
+            run_name=request.run_name,
+            record_to_langfuse=request.record_to_langfuse
+        )
+
+        logger.info(f"Evaluation complete: {result.passed}/{result.total_tests} passed ({result.pass_rate:.1%})")
+
+        # Convert dataclass to response model
+        return EvaluationResponse(
+            run_name=result.run_name,
+            timestamp=result.timestamp,
+            dataset_name=result.dataset_name,
+            total_tests=result.total_tests,
+            passed=result.passed,
+            failed=result.failed,
+            pass_rate=result.pass_rate,
+            average_score=result.average_score,
+            duration_ms=result.duration_ms,
+            results=[
+                TestCaseResultResponse(**asdict(r)) for r in result.results
+            ]
+        )
+
+    except Exception as e:
+        logger.error(f"Evaluation failed: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/sync-dataset", response_model=SyncDatasetResponse)
+async def sync_dataset_endpoint(request: SyncDatasetRequest):
+    """
+    Sync local test cases JSON file to Langfuse dataset.
+
+    Use this to update Langfuse with any changes made to the local file.
+    """
+    test_cases_path = pathlib.Path(__file__).parent / "data" / "eval_test_cases.csv"
+
+    if not test_cases_path.exists():
+        raise HTTPException(
+            status_code=404,
+            detail=f"Test cases file not found: {test_cases_path}"
+        )
+
+    try:
+        result = sync_to_langfuse(
+            str(test_cases_path),
+            force_recreate=request.force_recreate
+        )
+        return SyncDatasetResponse(**result)
+
+    except Exception as e:
+        logger.error(f"Dataset sync failed: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/evaluation/test-cases")
+async def get_test_cases():
+    """
+    Get the current local test cases for review.
+    """
+    test_cases_path = pathlib.Path(__file__).parent / "data" / "eval_test_cases.csv"
+
+    if not test_cases_path.exists():
+        raise HTTPException(
+            status_code=404,
+            detail=f"Test cases file not found: {test_cases_path}"
+        )
+
+    try:
+        return load_local_test_cases(str(test_cases_path))
+    except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 

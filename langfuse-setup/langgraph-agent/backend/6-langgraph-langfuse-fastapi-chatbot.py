@@ -89,6 +89,32 @@ class SyncDatasetResponse(BaseModel):
     version: str
 
 
+# Feedback API models
+class FeedbackRequest(BaseModel):
+    trace_id: str
+    score: int  # 1 = thumbs up, 0 = thumbs down
+    comment: Optional[str] = None
+
+
+class FeedbackResponse(BaseModel):
+    success: bool
+    message: str
+
+
+class FeedbackItem(BaseModel):
+    trace_id: str
+    score: str  # "thumbs_up" or "thumbs_down"
+    comment: Optional[str]
+    created_at: Optional[str]
+
+
+class FeedbackReportResponse(BaseModel):
+    total: int
+    positive: int
+    negative: int
+    feedback: List[FeedbackItem]
+
+
 # LangGraph State
 class State(TypedDict):
     messages: List[Any]
@@ -482,6 +508,84 @@ async def get_test_cases():
     try:
         return load_local_test_cases(str(test_cases_path))
     except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/feedback", response_model=FeedbackResponse)
+async def submit_feedback(request: FeedbackRequest):
+    """
+    Record user feedback (thumbs up/down) to Langfuse.
+
+    - trace_id: The trace to attach feedback to
+    - score: 1 for thumbs up, 0 for thumbs down
+    - comment: Optional text feedback
+    """
+    try:
+        langfuse = get_client()
+        langfuse.create_score(
+            trace_id=request.trace_id,
+            name="user-feedback",
+            value=request.score,
+            comment=request.comment
+        )
+        langfuse.flush()
+
+        logger.info(f"Recorded feedback for trace {request.trace_id}: score={request.score}")
+        return FeedbackResponse(success=True, message="Feedback recorded")
+
+    except Exception as e:
+        logger.error(f"Failed to record feedback: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/feedback-report", response_model=FeedbackReportResponse)
+async def get_feedback_report(limit: int = 100):
+    """
+    Get a report of all user feedback scores and comments.
+
+    - limit: Maximum number of traces to check (default 100)
+    """
+    try:
+        langfuse = get_client()
+
+        # Get recent traces and extract user-feedback scores from each
+        traces = langfuse.api.trace.list(limit=limit)
+
+        feedback_items = []
+        positive_count = 0
+        negative_count = 0
+
+        for trace in traces.data:
+            # Get full trace details which includes scores
+            trace_details = langfuse.api.trace.get(trace.id)
+
+            if hasattr(trace_details, 'scores') and trace_details.scores:
+                for score in trace_details.scores:
+                    if score.name == "user-feedback":
+                        is_positive = score.value == 1
+                        if is_positive:
+                            positive_count += 1
+                        else:
+                            negative_count += 1
+
+                        feedback_items.append(FeedbackItem(
+                            trace_id=trace.id,
+                            score="thumbs_up" if is_positive else "thumbs_down",
+                            comment=score.comment if hasattr(score, 'comment') else None,
+                            created_at=str(score.created_at) if hasattr(score, 'created_at') and score.created_at else None
+                        ))
+
+        logger.info(f"Feedback report: {len(feedback_items)} items, {positive_count} positive, {negative_count} negative")
+
+        return FeedbackReportResponse(
+            total=len(feedback_items),
+            positive=positive_count,
+            negative=negative_count,
+            feedback=feedback_items
+        )
+
+    except Exception as e:
+        logger.error(f"Failed to get feedback report: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
 

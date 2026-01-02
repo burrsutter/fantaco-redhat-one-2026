@@ -254,13 +254,87 @@ After running evaluations:
 
 ![Langfuse Fran Wilson Delivered](../images/langfuse-fran-wilson-delivered-orders-1.png)
 
-## What You'll See in Langfuse
 
-When you send messages, Langfuse will capture:
+## User Feedback
 
-- **Traces**: Complete conversation flows with session ID and user ID
-- **Spans**: Individual LLM calls with input/output messages
-- **Metrics**: Token usage, latency, and costs
+The chat UI includes thumbs up/down feedback buttons on each AI response. Users can optionally add a comment. All feedback is recorded to Langfuse as scores.
+
+### How It Works
+
+1. User sends a message and receives a response
+2. Below each AI response, 👍 and 👎 buttons appear
+3. Clicking a button opens a modal for an optional comment
+4. Feedback is submitted to Langfuse and linked to the trace
+
+### Feedback API
+
+**Submit feedback programmatically:**
+```bash
+curl -X POST http://localhost:8002/feedback \
+  -H "Content-Type: application/json" \
+  -d '{
+    "trace_id": "YOUR_TRACE_ID",
+    "score": 1,
+    "comment": "Very helpful response!"
+  }'
+```
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `trace_id` | string | The trace ID from the chat response |
+| `score` | int | `1` for thumbs up, `0` for thumbs down |
+| `comment` | string | Optional user comment |
+
+### Feedback Report
+
+Get a report of all user feedback:
+
+```bash
+curl http://localhost:8002/feedback-report
+```
+
+**Response:**
+```json
+{
+  "total": 15,
+  "positive": 12,
+  "negative": 3,
+  "feedback": [
+    {
+      "trace_id": "abc123",
+      "score": "thumbs_up",
+      "comment": "Very helpful!",
+      "created_at": "2026-01-01T14:30:00Z"
+    }
+  ]
+}
+```
+
+### Viewing Feedback in Langfuse
+
+1. Open your Langfuse dashboard
+2. Navigate to **Scores** in the left sidebar
+3. Filter by name: `user-feedback`
+4. View scores with values and comments
+
+![Feedback](../images/feedback-1.png)
+
+![Langfuse Feedback](../images/langfuse-scores-feedback.png)
+
+![Langfuse Feedback Comment](../images/langfuse-scores-feedback-comment-1.png)
+
+![Langfuse Feedback Comment](../images/langfuse-scores-feedback-comment-2.png)
+
+
+### Export Feedback
+
+Export the feedback for further analysis and reporting
+
+
+![Langfuse Feedback Export](../images/langfuse-scores-feedback-export-1.png)
+
+![Langfuse Feedback Export](../images/langfuse-scores-feedback-export-2.png)
+
 
 
 ## Project Structure

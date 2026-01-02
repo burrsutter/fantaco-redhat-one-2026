@@ -71,6 +71,29 @@
         </footer>
     </div>
 
+    <!-- Feedback Modal -->
+    <div id="feedback-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4 shadow-xl">
+            <h3 id="modal-title" class="text-lg font-semibold mb-4">
+                Thanks for your feedback!
+            </h3>
+            <textarea
+                id="feedback-comment"
+                placeholder="Any additional comments? (optional)"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                rows="3"
+            ></textarea>
+            <div class="flex justify-end gap-2 mt-4">
+                <button id="modal-cancel" class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg">
+                    Cancel
+                </button>
+                <button id="modal-submit" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
+                    Submit
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // Configuration - Use same origin when served from backend, otherwise localhost:8002
         const API_URL = window.location.port === '8002' || window.location.port === ''
@@ -96,8 +119,38 @@
             messagesEnd.scrollIntoView({ behavior: 'smooth' });
         }
 
+        // Create feedback buttons for assistant messages
+        function createFeedbackButtons(traceId) {
+            const feedbackDiv = document.createElement('div');
+            feedbackDiv.className = 'flex items-center gap-2 mt-3 pt-2 border-t border-gray-100';
+
+            // Thumbs up button
+            const thumbsUp = document.createElement('button');
+            thumbsUp.className = 'feedback-btn p-1 rounded hover:bg-gray-100 text-gray-400 hover:text-green-600 transition-colors';
+            thumbsUp.innerHTML = '👍';
+            thumbsUp.title = 'Helpful';
+            thumbsUp.onclick = () => showFeedbackModal(traceId, 1);
+
+            // Thumbs down button
+            const thumbsDown = document.createElement('button');
+            thumbsDown.className = 'feedback-btn p-1 rounded hover:bg-gray-100 text-gray-400 hover:text-red-600 transition-colors';
+            thumbsDown.innerHTML = '👎';
+            thumbsDown.title = 'Not helpful';
+            thumbsDown.onclick = () => showFeedbackModal(traceId, 0);
+
+            // Feedback status text (shows after submission)
+            const feedbackText = document.createElement('span');
+            feedbackText.className = 'feedback-status text-xs text-gray-400 ml-2 hidden';
+
+            feedbackDiv.appendChild(thumbsUp);
+            feedbackDiv.appendChild(thumbsDown);
+            feedbackDiv.appendChild(feedbackText);
+
+            return feedbackDiv;
+        }
+
         // Create message element
-        function createMessageElement(role, content, timestamp) {
+        function createMessageElement(role, content, timestamp, traceId = null) {
             const messageWrapper = document.createElement('div');
             messageWrapper.className = `flex ${role === 'user' ? 'justify-end' : 'justify-start'}`;
 
@@ -120,6 +173,14 @@
 
             messageDiv.appendChild(contentP);
             messageDiv.appendChild(timeP);
+
+            // Add feedback buttons for assistant messages with trace_id
+            if (role === 'assistant' && traceId) {
+                messageDiv.dataset.traceId = traceId;
+                const feedbackDiv = createFeedbackButtons(traceId);
+                messageDiv.appendChild(feedbackDiv);
+            }
+
             messageWrapper.appendChild(messageDiv);
 
             return messageWrapper;
@@ -150,13 +211,13 @@
         }
 
         // Add message to UI
-        function addMessage(role, content, timestamp = new Date()) {
+        function addMessage(role, content, timestamp = new Date(), traceId = null) {
             // Hide welcome message if visible
             if (welcomeMessage) {
                 welcomeMessage.style.display = 'none';
             }
 
-            const messageElement = createMessageElement(role, content, timestamp);
+            const messageElement = createMessageElement(role, content, timestamp, traceId);
             messagesContainer.appendChild(messageElement);
             scrollToBottom();
         }
@@ -211,8 +272,8 @@
 
                 const data = await response.json();
 
-                // Add AI response to UI
-                addMessage('assistant', data.reply);
+                // Add AI response to UI with trace_id for feedback
+                addMessage('assistant', data.reply, new Date(), data.trace_id);
 
             } catch (error) {
                 console.error('Error:', error);
@@ -239,6 +300,94 @@
 
         console.log('API_URL:', API_URL);
         console.log('Session ID:', sessionId);
+
+        // ============ Feedback Modal Logic ============
+
+        let pendingFeedback = { traceId: null, score: null };
+
+        function showFeedbackModal(traceId, score) {
+            pendingFeedback = { traceId, score };
+
+            const modal = document.getElementById('feedback-modal');
+            const title = document.getElementById('modal-title');
+
+            title.textContent = score === 1
+                ? '👍 Glad it was helpful!'
+                : '👎 Sorry to hear that';
+
+            document.getElementById('feedback-comment').value = '';
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function hideFeedbackModal() {
+            const modal = document.getElementById('feedback-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            pendingFeedback = { traceId: null, score: null };
+        }
+
+        async function submitFeedback() {
+            const comment = document.getElementById('feedback-comment').value.trim();
+            const submitBtn = document.getElementById('modal-submit');
+
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Submitting...';
+
+            try {
+                const response = await fetch(`${API_URL}/feedback`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        trace_id: pendingFeedback.traceId,
+                        score: pendingFeedback.score,
+                        comment: comment || null
+                    })
+                });
+
+                if (!response.ok) throw new Error('Failed to submit feedback');
+
+                // Update UI to show feedback was recorded
+                updateFeedbackUI(pendingFeedback.traceId, pendingFeedback.score);
+                hideFeedbackModal();
+
+            } catch (error) {
+                console.error('Feedback error:', error);
+                alert('Failed to submit feedback. Please try again.');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Submit';
+            }
+        }
+
+        function updateFeedbackUI(traceId, score) {
+            // Find the message with this trace_id and update its feedback buttons
+            const messages = document.querySelectorAll(`[data-trace-id="${traceId}"]`);
+            messages.forEach(msg => {
+                const buttons = msg.querySelectorAll('.feedback-btn');
+                buttons.forEach(btn => btn.classList.add('hidden'));
+
+                const status = msg.querySelector('.feedback-status');
+                if (status) {
+                    status.textContent = score === 1 ? '✓ Thanks for the feedback!' : '✓ Feedback recorded';
+                    status.classList.remove('hidden');
+                }
+            });
+        }
+
+        // Event listeners for modal
+        document.getElementById('modal-cancel').addEventListener('click', hideFeedbackModal);
+        document.getElementById('modal-submit').addEventListener('click', submitFeedback);
+
+        // Close modal on backdrop click
+        document.getElementById('feedback-modal').addEventListener('click', (e) => {
+            if (e.target.id === 'feedback-modal') hideFeedbackModal();
+        });
+
+        // Close modal on Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') hideFeedbackModal();
+        });
     </script>
 </body>
 </html>

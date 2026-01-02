@@ -1,9 +1,10 @@
 const express = require('express');
 const axios = require('axios');
+require('dotenv').config({ path: '../.env' });
 
 const app = express();
 const CHAT_UI_PORT = process.env.CHAT_UI_PORT || 3001;
-const FASTAPI_URL = process.env.FASTAPI_URL || 'http://localhost:8001';
+const FASTAPI_URL = process.env.FASTAPI_URL || 'http://localhost:8000';
 
 // Middleware
 app.use(express.json());

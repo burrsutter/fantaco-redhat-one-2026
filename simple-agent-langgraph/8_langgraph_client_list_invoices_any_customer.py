@@ -12,20 +12,15 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
+# Suppress noisy httpx logging
+logging.getLogger("httpx").setLevel(logging.WARNING)
 
 BASE_URL = os.getenv("LLAMA_STACK_BASE_URL")
 INFERENCE_MODEL = os.getenv("INFERENCE_MODEL")
 API_KEY = os.getenv("API_KEY")
 
-logger.info("Configuration loaded:")
-logger.info("  Base URL: %s", BASE_URL)
-logger.info("  Model: %s", INFERENCE_MODEL)
-logger.info("  API Key: %s", "***" if API_KEY else "None")
+print(f"Base URL: {BASE_URL}")
+print(f"Model:    {INFERENCE_MODEL}")
 
 
 llm = ChatOpenAI(
@@ -35,9 +30,9 @@ llm = ChatOpenAI(
     use_responses_api=True
 )
 
-logger.info("Testing LLM connectivity...")
+print("Testing LLM connectivity...")
 connectivity_response = llm.invoke("Hello")
-logger.info("LLM connectivity test successful")
+print("LLM connectivity OK")
 
 # MCP tool binding - both customer and finance MCP servers
 llm_with_tools = llm.bind(
@@ -75,48 +70,42 @@ graph = graph_builder.compile()
 
 # Parse command line argument for customer email
 if len(sys.argv) < 2:
-    logger.error("Usage: python 8_langgraph_client_list_invoices_any_customer.py <customer_email>")
-    logger.error("Example: python 8_langgraph_client_list_invoices_any_customer.py thomashardy@example.com")
+    print("Usage: python 8_langgraph_client_list_invoices_any_customer.py <customer_email>")
+    print("Example: python 8_langgraph_client_list_invoices_any_customer.py thomashardy@example.com")
     sys.exit(1)
 
 customer_email = sys.argv[1]
 
-logger.info("=" * 80)
-logger.info("Starting customer invoice lookup for: %s", customer_email)
-logger.info("=" * 80)
+print("\n" + "=" * 50)
+print(f"Finding invoices for: {customer_email}")
+print("=" * 50)
 
 response = graph.invoke(
     {"messages": [{"role": "user", "content": f"Find all invoices for {customer_email}"}]})
 
 # Extract and display customer and invoice information
 customer_info = None
-invoice_info = None
 
 for m in response['messages']:
     if hasattr(m, 'content') and isinstance(m.content, list):
         for item in m.content:
-            # Look for MCP tool call results
             if isinstance(item, dict) and item.get('type') == 'mcp_call' and item.get('output'):
                 try:
                     output_data = json.loads(item['output'])
 
-                    # Check if this is customer search results
+                    # Customer search results
                     if 'results' in output_data and output_data.get('results'):
-                        customer_info = output_data['results'][0] if output_data['results'] else None
-                        if customer_info:
-                            logger.info("")
-                            logger.info("=" * 80)
-                            logger.info("CUSTOMER INFORMATION")
-                            logger.info("=" * 80)
-                            logger.info("")
-                            logger.info("┌─ Customer ID: %s", customer_info.get('customerId', 'N/A'))
-                            logger.info("├─ Company Name: %s", customer_info.get('companyName', 'N/A'))
-                            logger.info("├─ Contact Name: %s", customer_info.get('contactName', 'N/A'))
-                            logger.info("└─ Contact Email: %s", customer_info.get('contactEmail', 'N/A'))
-                            logger.info("")
-                            logger.info("=" * 80)
+                        customer_info = output_data['results'][0]
+                        print("\n" + "=" * 50)
+                        print("CUSTOMER INFORMATION")
+                        print("=" * 50)
+                        print(f"\nCustomer ID:   {customer_info.get('customerId', 'N/A')}")
+                        print(f"Company Name:  {customer_info.get('companyName', 'N/A')}")
+                        print(f"Contact Name:  {customer_info.get('contactName', 'N/A')}")
+                        print(f"Contact Email: {customer_info.get('contactEmail', 'N/A')}")
+                        print("=" * 50)
 
-                    # Check if this is invoice data
+                    # Invoice data
                     if 'data' in output_data and output_data.get('data'):
                         invoices = output_data['data']
                     elif 'invoices' in output_data and output_data.get('invoices'):
@@ -125,37 +114,23 @@ for m in response['messages']:
                         invoices = None
 
                     if invoices:
-                        logger.info("")
-                        logger.info("=" * 80)
-                        logger.info("INVOICE HISTORY")
-                        logger.info("=" * 80)
+                        print("\n" + "=" * 50)
+                        print("INVOICE HISTORY")
+                        print("=" * 50)
 
                         for idx, invoice in enumerate(invoices, 1):
-                            logger.info("")
-                            logger.info("Invoice #%d:", idx)
-                            logger.info("  ┌─ Invoice ID: %s", invoice.get('id', invoice.get('invoiceId', 'N/A')))
-                            logger.info("  ├─ Invoice Number: %s", invoice.get('invoiceNumber', 'N/A'))
-                            logger.info("  ├─ Invoice Date: %s", invoice.get('invoiceDate', 'N/A'))
-                            logger.info("  ├─ Status: %s", invoice.get('status', 'N/A'))
-                            logger.info("  ├─ Total Amount: $%s", invoice.get('totalAmount', invoice.get('amount', 'N/A')))
-                            logger.info("  ├─ Customer ID: %s", invoice.get('customerId', customer_info.get('customerId', 'N/A') if customer_info else 'N/A'))
-                            logger.info("  ├─ Contact Name: %s", customer_info.get('contactName', 'N/A') if customer_info else 'N/A')
-                            logger.info("  └─ Contact Email: %s", invoice.get('customerEmail', customer_info.get('contactEmail', 'N/A') if customer_info else 'N/A'))
-                            logger.info("")
+                            print(f"\nInvoice #{idx}:")
+                            print(f"  Invoice ID:     {invoice.get('id', invoice.get('invoiceId', 'N/A'))}")
+                            print(f"  Invoice Number: {invoice.get('invoiceNumber', 'N/A')}")
+                            print(f"  Invoice Date:   {invoice.get('invoiceDate', 'N/A')}")
+                            print(f"  Status:         {invoice.get('status', 'N/A')}")
+                            print(f"  Total Amount:   ${invoice.get('totalAmount', invoice.get('amount', 'N/A'))}")
 
-                        logger.info("=" * 80)
-                        logger.info("Total Invoices: %d", len(invoices))
-                        logger.info("=" * 80)
+                        print("\n" + "=" * 50)
+                        print(f"Total Invoices: {len(invoices)}")
+                        print("=" * 50 + "\n")
                 except json.JSONDecodeError:
-                    logger.warning("Could not parse tool output")
+                    print("Could not parse tool output")
 
-            # Display final text response
             elif isinstance(item, dict) and item.get('type') == 'text':
-                logger.info("")
-                logger.info("Assistant Response:")
-                logger.info("  %s", item.get('text', ''))
-                logger.info("")
-
-logger.info("=" * 80)
-logger.info("Customer invoice lookup completed")
-logger.info("=" * 80)
+                print(f"\nAssistant: {item.get('text', '')}\n")

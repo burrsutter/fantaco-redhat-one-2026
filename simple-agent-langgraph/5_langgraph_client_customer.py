@@ -13,12 +13,6 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(message)s'
-)
-logger = logging.getLogger(__name__)
-
 # Suppress noisy httpx logging
 logging.getLogger("httpx").setLevel(logging.WARNING)
 
@@ -26,10 +20,8 @@ BASE_URL = os.getenv("LLAMA_STACK_BASE_URL")
 INFERENCE_MODEL = os.getenv("INFERENCE_MODEL")
 API_KEY = os.getenv("API_KEY")
 
-logger.info("Configuration loaded:")
-logger.info("  Base URL: %s", BASE_URL)
-logger.info("  Model: %s", INFERENCE_MODEL)
-logger.info("  API Key: %s", "***" if API_KEY else "None")
+print(f"Base URL: {BASE_URL}")
+print(f"Model:    {INFERENCE_MODEL}")
 
 
 llm = ChatOpenAI(
@@ -39,9 +31,9 @@ llm = ChatOpenAI(
     use_responses_api=True
 )
 
-logger.info("Testing LLM connectivity...")
+print("Testing LLM connectivity...")
 connectivity_response = llm.invoke("Hello")
-logger.info("LLM connectivity test successful")
+print("LLM connectivity OK")
 
 # MCP tool binding using OpenAI Responses API format
 llm_with_tools = llm.bind(
@@ -73,9 +65,9 @@ graph_builder.add_edge("chatbot", END)
 
 graph = graph_builder.compile()
 
-logger.info("=" * 80)
-logger.info("Starting customer search...")
-logger.info("=" * 80)
+print("\n" + "=" * 50)
+print("Searching for customer: thomashardy@example.com")
+print("=" * 50)
 
 response = graph.invoke(
     {"messages": [{"role": "user", "content": "Search for customer with email thomashardy@example.com"}]})
@@ -84,38 +76,26 @@ response = graph.invoke(
 for m in response['messages']:
     if hasattr(m, 'content') and isinstance(m.content, list):
         for item in m.content:
-            # Look for MCP tool call results
             if isinstance(item, dict) and item.get('type') == 'mcp_call' and item.get('output'):
                 try:
                     output_data = json.loads(item['output'])
                     if 'results' in output_data and output_data['results']:
-                        logger.info("")
-                        logger.info("=" * 80)
-                        logger.info("CUSTOMER SEARCH RESULTS")
-                        logger.info("=" * 80)
+                        print("\n" + "=" * 50)
+                        print("CUSTOMER SEARCH RESULTS")
+                        print("=" * 50)
 
                         for customer in output_data['results']:
-                            logger.info("")
-                            logger.info("┌─ Customer ID: %s", customer.get('customerId', 'N/A'))
-                            logger.info("├─ Company Name: %s", customer.get('companyName', 'N/A'))
-                            logger.info("├─ Contact Name: %s", customer.get('contactName', 'N/A'))
-                            logger.info("└─ Contact Email: %s", customer.get('contactEmail', 'N/A'))
-                            logger.info("")
+                            print(f"\nCustomer ID:   {customer.get('customerId', 'N/A')}")
+                            print(f"Company Name:  {customer.get('companyName', 'N/A')}")
+                            print(f"Contact Name:  {customer.get('contactName', 'N/A')}")
+                            print(f"Contact Email: {customer.get('contactEmail', 'N/A')}")
 
-                        logger.info("=" * 80)
+                        print("=" * 50 + "\n")
                 except json.JSONDecodeError:
-                    logger.warning("Could not parse tool output")
+                    print("Could not parse tool output")
 
-            # Display final text response
             elif isinstance(item, dict) and item.get('type') == 'text':
-                logger.info("")
-                logger.info("Assistant Response:")
-                logger.info("  %s", item.get('text', ''))
-                logger.info("")
-
-logger.info("=" * 80)
-logger.info("Customer search completed")
-logger.info("=" * 80) 
+                print(f"\nAssistant: {item.get('text', '')}\n") 
 
 
 

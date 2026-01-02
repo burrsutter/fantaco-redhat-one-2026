@@ -23,14 +23,15 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# Suppress noisy httpx logging
+logging.getLogger("httpx").setLevel(logging.WARNING)
+
 BASE_URL = os.getenv("LLAMA_STACK_BASE_URL")
 API_KEY = os.getenv("LLAMA_STACK_API_KEY")
 INFERENCE_MODEL = os.getenv("INFERENCE_MODEL")
 
-logger.info("Configuration loaded:")
-logger.info("  Base URL: %s", BASE_URL)
-logger.info("  Model: %s", INFERENCE_MODEL)
-logger.info("  API Key: %s", "***" if API_KEY else "None")
+print(f"Base URL: {BASE_URL}")
+print(f"Model:    {INFERENCE_MODEL}")
 
 client = Client(
     base_url=BASE_URL,
@@ -42,10 +43,9 @@ def fetch_order_history_by_customer(customer_id="AROUT"):
     """Fetch order history using Llama Stack tool_runtime to invoke finance MCP tool directly"""
 
     try:
-        # Execute tool invocation
-        logger.info("=" * 80)
-        logger.info("Fetching order history for customer: %s", customer_id)
-        logger.info("=" * 80)
+        print("\n" + "=" * 50)
+        print(f"Fetching order history for customer: {customer_id}")
+        print("=" * 50)
 
         # Invoke the fetch_order_history tool directly
         result = client.tool_runtime.invoke_tool(
@@ -69,41 +69,34 @@ def fetch_order_history_by_customer(customer_id="AROUT"):
                             orders = None
 
                         if orders:
-                            logger.info("")
-                            logger.info("=" * 80)
-                            logger.info("ORDER HISTORY FOR CUSTOMER: %s", customer_id)
-                            logger.info("=" * 80)
-                            logger.info("")
+                            print("\n" + "=" * 50)
+                            print(f"ORDER HISTORY FOR CUSTOMER: {customer_id}")
+                            print("=" * 50)
 
                             for idx, order in enumerate(orders, 1):
-                                logger.info("Order #%d:", idx)
-                                logger.info("  ┌─ Order ID: %s", order.get('id', order.get('orderId', 'N/A')))
-                                logger.info("  ├─ Order Number: %s", order.get('orderNumber', 'N/A'))
-                                logger.info("  ├─ Order Date: %s", order.get('orderDate', 'N/A'))
-                                logger.info("  ├─ Status: %s", order.get('status', 'N/A'))
-                                logger.info("  ├─ Total Amount: $%s", order.get('totalAmount', order.get('freight', 'N/A')))
-                                logger.info("")
+                                print(f"\nOrder #{idx}:")
+                                print(f"  Order ID:     {order.get('id', order.get('orderId', 'N/A'))}")
+                                print(f"  Order Number: {order.get('orderNumber', 'N/A')}")
+                                print(f"  Order Date:   {order.get('orderDate', 'N/A')}")
+                                print(f"  Status:       {order.get('status', 'N/A')}")
+                                print(f"  Total Amount: ${order.get('totalAmount', order.get('freight', 'N/A'))}")
 
-                            logger.info("=" * 80)
-                            logger.info("Total Orders Found: %d", len(orders))
-                            logger.info("=" * 80)
+                            print("\n" + "=" * 50)
+                            print(f"Total Orders Found: {len(orders)}")
+                            print("=" * 50 + "\n")
                         else:
-                            logger.info("No orders found for customer: %s", customer_id)
+                            print(f"No orders found for customer: {customer_id}")
 
                     except json.JSONDecodeError:
-                        logger.warning("Could not parse order history response as JSON")
-                        logger.info("Raw response: %s", content_item.text)
+                        print("Could not parse response as JSON")
+                        print(f"Raw response: {content_item.text}")
         else:
-            logger.warning("No content in tool invocation result")
-
-        logger.info("")
-        logger.info("Order history fetch completed")
+            print("No content in result")
 
         return result
 
     except Exception as e:
-        logger.error("Error during order history fetch: %s", str(e))
-        logger.exception("Stack trace:")
+        print(f"\nError: {str(e)}")
         return False
 
 

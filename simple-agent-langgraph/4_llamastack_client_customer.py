@@ -10,7 +10,6 @@ CURRENT STATUS:
 """
 
 from llama_stack_client import Client
-from llama_stack_client.types import AgentConfig
 from dotenv import load_dotenv
 import os
 import logging

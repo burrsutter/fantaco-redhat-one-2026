@@ -9,7 +9,15 @@ import concurrent.futures
 import argparse
 import statistics
 import os
+import logging
 from urllib.parse import urlencode
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 
 # Default configuration
 SERVICE_URL = os.getenv("SERVICE_URL", "langgraph-fastapi")
@@ -33,21 +41,26 @@ def make_request(base_url: str, query: str) -> dict:
     url = f"{base_url}/question"
     params = {"q": query}
 
+    logger.debug(f"Sending request: {query}")
     start_time = time.time()
     try:
         response = requests.get(url, params=params, timeout=120)
         elapsed = time.time() - start_time
+
+        response_data = response.json() if response.status_code == 200 else response.text
+        logger.debug(f"Response for '{query[:40]}...': {response_data}")
 
         return {
             "query": query,
             "status_code": response.status_code,
             "elapsed": elapsed,
             "success": response.status_code == 200,
-            "response": response.json() if response.status_code == 200 else response.text,
+            "response": response_data,
             "error": None
         }
     except requests.exceptions.RequestException as e:
         elapsed = time.time() - start_time
+        logger.debug(f"Request failed for '{query[:40]}...': {e}")
         return {
             "query": query,
             "status_code": None,
@@ -160,8 +173,18 @@ def main():
         action="store_true",
         help="Show full response content"
     )
+    parser.add_argument(
+        "--debug", "-d",
+        action="store_true",
+        help="Enable debug logging to see actual responses"
+    )
 
     args = parser.parse_args()
+
+    # Set debug logging level if requested
+    if args.debug:
+        logging.getLogger().setLevel(logging.DEBUG)
+        logger.setLevel(logging.DEBUG)
 
     # Build query list based on iterations
     all_queries = QUERIES * args.iterations

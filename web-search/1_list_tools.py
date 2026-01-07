@@ -5,10 +5,21 @@ import logging
 
 load_dotenv()
 
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
+
 # Suppress noisy httpx logging
 logging.getLogger("httpx").setLevel(logging.WARNING)
 
 BASE_URL = os.getenv("LLAMA_STACK_BASE_URL")
+
+# Log environment variables at startup
+logger.info("=" * 50)
+logger.info("Environment Variables")
+logger.info("=" * 50)
+logger.info(f"LLAMA_STACK_BASE_URL: {BASE_URL}")
+logger.info("=" * 50)
 
 client = Client(
     base_url=BASE_URL

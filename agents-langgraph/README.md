@@ -37,37 +37,39 @@ python 9_langgraph_fastapi.py
 ```
 
 ```bash
-open http://localhost:8001/docs
+open http://localhost:8000/docs
 ```
 
 ### Tests using the MCP Servers
 
 ```bash
-curl -sS "http://localhost:8001/find_orders?email=thomashardy@example.com" | jq
-curl -sS "http://localhost:8001/find_invoices?email=liuwong@example.com" | jq
+curl -sS "http://localhost:8000/find_orders?email=thomashardy@example.com" | jq
+curl -sS "http://localhost:8000/find_invoices?email=liuwong@example.com" | jq
 ```
 
 ### Tests using non-customer contacts (not in database)
 
 ```bash
-curl -sS -G "http://localhost:8001/question" --data-urlencode "q=who is Burr Sutter?"
-curl -sS -G "http://localhost:8001/question" --data-urlencode "q=who is Natale Vinto of Red Hat?"
+curl -sS -G "http://localhost:8000/question" --data-urlencode "q=who is Burr Sutter?"
+curl -sS -G "http://localhost:8000/question" --data-urlencode "q=who is Natale Vinto of Red Hat?"
 ```
 
 ### Tests using customer contacts
 
 ```bash
-curl -sS -G "http://localhost:8001/question" --data-urlencode "q=who is Thomas Hardy?"
-curl -sS -G "http://localhost:8001/question" --data-urlencode "q=who does Thomas Hardy work for?"
-curl -sS -G "http://localhost:8001/question" --data-urlencode "q=who does Fran Wilson work for?"
+curl -sS -G "http://localhost:8000/question" --data-urlencode "q=who is Thomas Hardy?"
+curl -sS -G "http://localhost:8000/question" --data-urlencode "q=who does Thomas Hardy work for?"
+curl -sS -G "http://localhost:8000/question" --data-urlencode "q=who does Fran Wilson work for?"
 ```
 
 ```bash
-curl -sS -G "http://localhost:8001/question" --data-urlencode "q=list orders for Thomas Hardy?"
-curl -sS -G "http://localhost:8001/question" --data-urlencode "q=find orders for thomashardy@example.com?"
-curl -sS -G "http://localhost:8001/question" --data-urlencode "q=get me invoices for Liu Wong?"
-curl -sS -G "http://localhost:8001/question" --data-urlencode "q=fetch invoices for franwilson@example.com?"
-curl -sS -G "http://localhost:8001/question" --data-urlencode "q=fetch invoices for Fran Wilson?"
+curl -sS -G "http://localhost:8000/question" --data-urlencode "q=list invoices for Thomas Hardy?"
+curl -sS -G "http://localhost:8000/question" --data-urlencode "q=find orders for thomashardy@example.com?"
+curl -sS -G "http://localhost:8000/question" --data-urlencode "q=get me invoices for Liu Wong?"
+curl -sS -G "http://localhost:8000/question" --data-urlencode "q=fetch orders for liuwong@example.com?"
+curl -sS -G "http://localhost:8000/question" --data-urlencode "q=fetch invoices for Fran Wilson?"
+curl -sS -G "http://localhost:8000/question" --data-urlencode "q=fetch orders for franwilson@example.com?"
+
 ```
 
 ## Frontend 

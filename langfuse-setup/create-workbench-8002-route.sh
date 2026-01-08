@@ -1,11 +1,20 @@
 #!/bin/bash
 
-# Find namespace starting with "agentic-" or use current namespace
-NAMESPACE=$(oc get namespaces -o name | grep "agentic-" | head -1 | sed 's|namespace/||')
-if [ -z "$NAMESPACE" ]; then
-    NAMESPACE=$(oc project -q)
+# Usage: ./create-workbench-8002-route.sh [user]
+# Example: ./create-workbench-8002-route.sh user1
+#          ./create-workbench-8002-route.sh user2
+
+USER="${1:-user1}"
+NAMESPACE="agentic-${USER}"
+
+# Verify namespace exists
+if ! oc get namespace "$NAMESPACE" &>/dev/null; then
+    echo "Error: Namespace $NAMESPACE does not exist"
+    echo "Usage: $0 [user]  (e.g., user1, user2, user3)"
+    exit 1
 fi
 echo "Using namespace: $NAMESPACE"
+echo "Target user: $USER"
 
 # Get the cluster's base domain from any existing route
 BASE_DOMAIN=$(oc get routes -A -o jsonpath='{.items[0].spec.host}' 2>/dev/null | sed 's/^[^.]*\.//')
@@ -20,6 +29,28 @@ NEW_HOST="workbench-8002-${NAMESPACE}.${BASE_DOMAIN}"
 echo "Creating Service and Route for port 8002..."
 echo "Host will be: https://${NEW_HOST}"
 
+# Create NetworkPolicy to allow ingress on port 8002
+oc apply -n "$NAMESPACE" -f - <<EOF
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-workbench-8002
+spec:
+  podSelector:
+    matchLabels:
+      app: ${USER}-workbench
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          network.openshift.io/policy-group: ingress
+    ports:
+    - port: 8002
+      protocol: TCP
+  policyTypes:
+  - Ingress
+EOF
+
 # Create Service targeting the workbench pod
 oc apply -n "$NAMESPACE" -f - <<EOF
 apiVersion: v1
@@ -28,7 +59,7 @@ metadata:
   name: workbench-8002
 spec:
   selector:
-    app: user1-workbench
+    app: ${USER}-workbench
   ports:
     - port: 8002
       targetPort: 8002

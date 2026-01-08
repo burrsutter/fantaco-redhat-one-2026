@@ -21,8 +21,13 @@ from langchain_core.messages import HumanMessage, AIMessage, SystemMessage, Tool
 from langfuse.langchain import CallbackHandler
 from langfuse import Langfuse, get_client
 
-# Load environment variables
-load_dotenv()
+# Load environment variables from the same directory as this script
+import pathlib
+_script_dir = pathlib.Path(__file__).parent
+_env_path = _script_dir / ".env"
+load_dotenv(_env_path)
+print(f"[Config] Loaded .env from: {_env_path}")
+print(f"[Config] LANGFUSE_HOST={os.getenv('LANGFUSE_HOST')}")
 
 # Initialize Langfuse with debug mode to troubleshoot trace issues
 _langfuse_client = Langfuse(debug=True)

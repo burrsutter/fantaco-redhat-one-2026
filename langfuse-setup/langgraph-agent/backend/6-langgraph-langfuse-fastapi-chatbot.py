@@ -355,11 +355,10 @@ Be concise and helpful.""")
                 final_response = msg.content
                 break
 
-    # Flush Langfuse to ensure all data is sent
-    langfuse_client = get_client()
-    langfuse_client.flush()
+    # Flush the CallbackHandler to ensure all trace data is sent
+    langfuse_handler.flush()
 
-    trace_id = langfuse_handler.last_trace_id
+    trace_id = langfuse_handler.get_trace_id()
     if trace_id:
         logger.info(f"Request processed. Trace ID: {trace_id}")
         logger.info(f"View trace at: {LANGFUSE_HOST}/project/*/traces/{trace_id}")

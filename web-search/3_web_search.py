@@ -27,19 +27,17 @@ client = LlamaStackClient(
     provider_data={"tavily_search_api_key": TAVILY_SEARCH_API_KEY} if TAVILY_SEARCH_API_KEY else None,
 )
 
-# Create response with web search (streaming)
+# Create response with web search (non-streaming)
 response = client.responses.create(
     model=INFERENCE_MODEL,
     input=QUESTION,
     tools=[{"type": "web_search"}],
-    stream=True,
+    stream=False,
 )
 
-# Process streaming response
-for chunk in response:
-    if hasattr(chunk, 'output_text') and chunk.output_text:
-        print(chunk.output_text, end="", flush=True)
-    elif hasattr(chunk, 'delta') and chunk.delta:
-        print(chunk.delta, end="", flush=True)
-
-print()  # Final newline
+# Process non-streaming response
+for item in response.output:
+    if item.type == "message":
+        for content in item.content:
+            if hasattr(content, 'text'):
+                print(content.text)

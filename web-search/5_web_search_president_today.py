@@ -1,5 +1,6 @@
 import os
 import logging
+from datetime import date
 from dotenv import load_dotenv
 from llama_stack_client import LlamaStackClient
 
@@ -15,9 +16,14 @@ LLAMA_STACK_BASE_URL = os.getenv("LLAMA_STACK_BASE_URL", "http://localhost:8321"
 INFERENCE_MODEL = os.getenv("INFERENCE_MODEL", "vllm/qwen3-14b")
 TAVILY_SEARCH_API_KEY = os.getenv("TAVILY_SEARCH_API_KEY")
 
+today = date.today()
+
+prompt=f"Today is {today}. Who is the current US President?"
+
 print(f"Base URL:   {LLAMA_STACK_BASE_URL}")
 print(f"Model:      {INFERENCE_MODEL}")
 print(f"Tavily Key: {'Set' if TAVILY_SEARCH_API_KEY else 'NOT SET'}")
+print(f"Today:      {today}")
 
 # Initialize client with Tavily API key
 client = LlamaStackClient(
@@ -28,7 +34,7 @@ client = LlamaStackClient(
 # Create response with web search (non-streaming)
 response = client.responses.create(
     model=INFERENCE_MODEL,
-    input="Who is the current US President?",
+    input=prompt,
     tools=[{"type": "web_search"}],
     stream=False,
 )

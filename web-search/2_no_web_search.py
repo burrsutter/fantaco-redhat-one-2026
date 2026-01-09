@@ -20,18 +20,16 @@ print(f"Model:    {INFERENCE_MODEL}")
 # Initialize client
 client = LlamaStackClient(base_url=LLAMA_STACK_BASE_URL)
 
-# Create response without web search (streaming)
+# Create response without web search (non-streaming)
 response = client.responses.create(
     model=INFERENCE_MODEL,
     input="Who won the last Super Bowl?",
-    stream=True,
+    stream=False,
 )
 
-# Process streaming response
-for chunk in response:
-    if hasattr(chunk, 'output_text') and chunk.output_text:
-        print(chunk.output_text, end="", flush=True)
-    elif hasattr(chunk, 'delta') and chunk.delta:
-        print(chunk.delta, end="", flush=True)
-
-print()  # Final newline
+# Process non-streaming response
+for item in response.output:
+    if item.type == "message":
+        for content in item.content:
+            if hasattr(content, 'text'):
+                print(content.text)

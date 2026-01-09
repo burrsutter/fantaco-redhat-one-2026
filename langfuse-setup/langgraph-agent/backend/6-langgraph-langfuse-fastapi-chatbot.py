@@ -29,6 +29,9 @@ load_dotenv(_env_path)
 API_KEY = os.getenv("API_KEY", "not-needed")
 INFERENCE_MODEL = os.getenv("INFERENCE_MODEL", "qwen3:14b-q8_0")
 LLAMA_STACK_BASE_URL = os.getenv("LLAMA_STACK_BASE_URL", "http://localhost:8321/v1")
+# Ensure the URL ends with /v1 for OpenAI-compatible API
+if not LLAMA_STACK_BASE_URL.endswith("/v1"):
+    LLAMA_STACK_BASE_URL = LLAMA_STACK_BASE_URL.rstrip("/") + "/v1"
 LANGFUSE_SECRET_KEY = os.getenv("LANGFUSE_SECRET_KEY")
 LANGFUSE_PUBLIC_KEY = os.getenv("LANGFUSE_PUBLIC_KEY")
 LANGFUSE_HOST = os.getenv("LANGFUSE_HOST")

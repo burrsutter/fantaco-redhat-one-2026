@@ -27,7 +27,7 @@ else:
     vector_store = None
 
 if not vector_store:
-    print("Error: Vector store 'hr-benefits-hybrid' not found. Please run 1d_create_vector_store_clean_html.py first.")
+    print("Error: Vector store 'hr-benefits-hybrid' not found. Please run 1_create_vector_store.py first.")
     exit(1)
 
 print(f"Using vector store: {vector_store.id}")

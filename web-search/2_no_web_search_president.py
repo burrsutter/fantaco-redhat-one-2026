@@ -13,25 +13,17 @@ load_dotenv()
 # Get configuration from environment
 LLAMA_STACK_BASE_URL = os.getenv("LLAMA_STACK_BASE_URL", "http://localhost:8321")
 INFERENCE_MODEL = os.getenv("INFERENCE_MODEL", "vllm/qwen3-14b")
-TAVILY_SEARCH_API_KEY = os.getenv("TAVILY_SEARCH_API_KEY")
-QUESTION = os.getenv("QUESTION", "Who won the last Super Bowl?")
 
-print(f"Base URL:   {LLAMA_STACK_BASE_URL}")
-print(f"Model:      {INFERENCE_MODEL}")
-print(f"Tavily Key: {'Set' if TAVILY_SEARCH_API_KEY else 'NOT SET'}")
-print(f"Question:   {QUESTION}")
+print(f"Base URL: {LLAMA_STACK_BASE_URL}")
+print(f"Model:    {INFERENCE_MODEL}")
 
-# Initialize client with Tavily API key
-client = LlamaStackClient(
-    base_url=LLAMA_STACK_BASE_URL,
-    provider_data={"tavily_search_api_key": TAVILY_SEARCH_API_KEY} if TAVILY_SEARCH_API_KEY else None,
-)
+# Initialize client
+client = LlamaStackClient(base_url=LLAMA_STACK_BASE_URL)
 
-# Create response with web search (streaming)
+# Create response without web search (streaming)
 response = client.responses.create(
     model=INFERENCE_MODEL,
-    input=QUESTION,
-    tools=[{"type": "web_search"}],
+    input="Who is the current US President?",
     stream=True,
 )
 

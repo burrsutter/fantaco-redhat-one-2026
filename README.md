@@ -145,6 +145,24 @@ python finance-api-mcp-server.py
 
 Using `mcp-inspector` to test the MCP Servers
 
+## Agents with Llama Stack
+
+The `agents-llama-stack/` directory contains numbered example scripts that demonstrate progressive agent capabilities. **Run these scripts in order 1 through 6** to learn the concepts step-by-step:
+
+1. `1_hello_world_agent_no_stream.py` - Basic agent without streaming
+2. `1_hello_world_agent_streaming.py` - Basic agent with streaming
+3. `3_list_customer_tools.py` / `3_list_finance_tools.py` - List available MCP tools
+4. `4_agent_customer_mcp.py` / `4_agent_finance_mcp.py` - Single-domain agents
+5. `5_agent_customer_and_finance.py` - Multi-domain agent
+6. `6_multi_turn_agent.py` - Multi-turn conversational agent
+
+```bash
+cd agents-llama-stack
+source .venv/bin/activate
+python 1_hello_world_agent_no_stream.py
+# Continue with 2, 3, 4, 5, 6...
+```
+
 ## Simple Agent LangGraph
 
 Follow the `REAME.md` in `simple-agent-langgraph`

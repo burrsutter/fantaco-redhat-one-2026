@@ -22,10 +22,23 @@ fi
 echo "Using namespace: $NAMESPACE"
 echo "Detected user: $USER"
 
-# Get the cluster's base domain from any existing route
-BASE_DOMAIN=$(oc get routes -A -o jsonpath='{.items[0].spec.host}' 2>/dev/null | sed 's/^[^.]*\.//')
+# Get the cluster's base domain - try multiple methods
+# Method 1: From ingress config (most reliable)
+BASE_DOMAIN=$(oc get ingresses.config.openshift.io cluster -o jsonpath='{.spec.domain}' 2>/dev/null)
+
+# Method 2: From routes in current namespace
+if [ -z "$BASE_DOMAIN" ]; then
+    BASE_DOMAIN=$(oc get routes -n "$NAMESPACE" -o jsonpath='{.items[0].spec.host}' 2>/dev/null | sed 's/^[^.]*\.//')
+fi
+
+# Method 3: From console route (if accessible)
+if [ -z "$BASE_DOMAIN" ]; then
+    BASE_DOMAIN=$(oc get route console -n openshift-console -o jsonpath='{.spec.host}' 2>/dev/null | sed 's/^console\.//')
+fi
+
 if [ -z "$BASE_DOMAIN" ]; then
     echo "Error: Could not determine cluster base domain"
+    echo "Try running: oc get ingresses.config.openshift.io cluster -o jsonpath='{.spec.domain}'"
     exit 1
 fi
 

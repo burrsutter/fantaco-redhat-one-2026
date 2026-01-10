@@ -20,6 +20,8 @@ postgresql:
 clickhouse:
   # Single-user: 1 replica instead of 3 (saves 2 pods)
   replicaCount: 1
+  # Disable ON CLUSTER queries for single-replica (avoids cluster config issues)
+  clusterEnabled: false
   auth:
     existingSecret: langfuse-clickhouse-auth
     existingSecretKey: password

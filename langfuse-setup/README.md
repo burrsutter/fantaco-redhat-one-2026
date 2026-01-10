@@ -124,52 +124,29 @@ This folder and sub-project include the instructions to run LangFuse on OpenShif
 
 ### Installation: OpenShift
 
-As the Cluster Admin
+
 
 ```bash
-oc new-project langfuse
+source ./create-langfuse-url.sh
+```
 
+```bash
+source ./create-secrets.sh
+```
+
+```bash
 helm repo add langfuse https://langfuse.github.io/langfuse-k8s
 helm repo update
 ```
 
 ```bash
-LF_SALT="$(openssl rand -hex 16)"
-LF_NEXTAUTH_SECRET="$(openssl rand -hex 32)"
-PG_PASS="$(openssl rand -hex 16)"
-CH_PASS="$(openssl rand -hex 16)"
-REDIS_PASS="$(openssl rand -hex 16)"
-S3_ROOT_PASS="$(openssl rand -hex 16)"
+helm install langfuse langfuse/langfuse \
+    -f values-openshift-single-user.yaml \
+    --set langfuse.nextauth.url=$LANGFUSE_URL
 ```
 
 ```bash
-oc -n langfuse create secret generic langfuse-general \
-  --from-literal=salt="$LF_SALT"
-
-oc -n langfuse create secret generic langfuse-nextauth-secret \
-  --from-literal=nextauth-secret="$LF_NEXTAUTH_SECRET"
-
-oc -n langfuse create secret generic langfuse-postgresql-auth \
-  --from-literal=password="$PG_PASS" \
-  --from-literal=postgres-password="$PG_PASS"
-
-oc -n langfuse create secret generic langfuse-clickhouse-auth \
-  --from-literal=password="$CH_PASS"
-
-oc -n langfuse create secret generic langfuse-redis-auth \
-  --from-literal=password="$REDIS_PASS"
-
-oc -n langfuse create secret generic langfuse-s3-auth \
-  --from-literal=rootUser="root" \
-  --from-literal=rootPassword="$S3_ROOT_PASS"
-```
-
-```bash
-helm install langfuse langfuse/langfuse -n langfuse -f values-openshift.yaml
-```
-
-```bash
-oc get pods -n langfuse
+oc get pods 
 ```
 
 ```
@@ -188,46 +165,6 @@ langfuse-zookeeper-2               0/1     ContainerCreating   0          6s
 ```
 
 When all pods have started successfully
-
-```bash
-oc expose service langfuse-web -n langfuse
-```
-
-```bash
-export LANGFUSE_URL="http://$(oc get route -l app.kubernetes.io/name=langfuse -o jsonpath='{.items[0].spec.host}')"
-echo $LANGFUSE_URL
-```
-
-You need to update the values-openshift.yaml otherwise the sign-up login process will redirect to the incorrect URL (e.g. localhost:3000)
-
-```
-  langfuse:
-    nextauth:
-      url: "PLACEHOLDER_URL"
-```
-
-
-MacOS
-
-```bash
-sed -i '' "s|PLACEHOLDER_URL|$LANGFUSE_URL|g" values-openshift.yaml
-```
-
-Linux
-
-```bash
-sed -i "s|PLACEHOLDER_URL|$LANGFUSE_URL|g" values-openshift.yaml
-```
-
-Update the deployment
-
-```bash
-helm upgrade langfuse langfuse/langfuse -n langfuse -f values-openshift.yaml
-```
-
-```bash
-oc rollout restart deployment langfuse-web -n langfuse
-```
 
 
 ```bash

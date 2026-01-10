@@ -3,25 +3,18 @@
 # Get feedback score and comment for a Langfuse trace
 # Usage: ./get-trace-feedback.sh [trace_id]
 #        If no trace_id provided, gets the latest trace
+#
+# Required environment variables:
+#   LANGFUSE_PUBLIC_KEY - Public API key (pk-lf-...)
+#   LANGFUSE_SECRET_KEY - Secret API key (sk-lf-...)
+#   LANGFUSE_HOST       - Langfuse URL (https://...)
 
-# Load environment variables from .env file
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ENV_FILE="${SCRIPT_DIR}/langgraph-agent/backend/.env"
-
-if [ -f "$ENV_FILE" ]; then
-    # Extract values, removing quotes
-    LANGFUSE_PUBLIC_KEY=$(grep "^LANGFUSE_PUBLIC_KEY" "$ENV_FILE" | cut -d'=' -f2 | tr -d '"')
-    LANGFUSE_SECRET_KEY=$(grep "^LANGFUSE_SECRET_KEY" "$ENV_FILE" | cut -d'=' -f2 | tr -d '"')
-    LANGFUSE_HOST=$(grep "^LANGFUSE_HOST" "$ENV_FILE" | cut -d'=' -f2 | tr -d '"')
-else
-    echo "Error: .env file not found at $ENV_FILE"
-    echo "Using environment variables if set..."
-fi
-
-# Check required variables
 if [ -z "$LANGFUSE_PUBLIC_KEY" ] || [ -z "$LANGFUSE_SECRET_KEY" ] || [ -z "$LANGFUSE_HOST" ]; then
     echo "Error: Missing Langfuse credentials"
-    echo "Set LANGFUSE_PUBLIC_KEY, LANGFUSE_SECRET_KEY, and LANGFUSE_HOST"
+    echo "Required environment variables:"
+    echo "  LANGFUSE_PUBLIC_KEY"
+    echo "  LANGFUSE_SECRET_KEY"
+    echo "  LANGFUSE_HOST"
     exit 1
 fi
 
@@ -32,7 +25,7 @@ if [ -z "$TRACE_ID" ]; then
     echo "No trace ID provided, fetching latest trace..."
     TRACE_ID=$(curl -s -u "${LANGFUSE_PUBLIC_KEY}:${LANGFUSE_SECRET_KEY}" \
         "${LANGFUSE_HOST}/api/public/traces?limit=1" | \
-        python3 -c "import sys,json; d=json.load(sys.stdin); print(d['data'][0]['id'] if d.get('data') else '')" 2>/dev/null)
+        python -c "import sys,json; d=json.load(sys.stdin); print(d['data'][0]['id'] if d.get('data') else '')" 2>/dev/null)
 
     if [ -z "$TRACE_ID" ]; then
         echo "Error: No traces found"
@@ -48,7 +41,7 @@ echo "================================================"
 # Get trace details with scores
 curl -s -u "${LANGFUSE_PUBLIC_KEY}:${LANGFUSE_SECRET_KEY}" \
     "${LANGFUSE_HOST}/api/public/traces/${TRACE_ID}" | \
-python3 -c "
+python -c "
 import sys, json
 
 try:

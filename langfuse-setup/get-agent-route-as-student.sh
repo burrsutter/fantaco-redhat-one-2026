@@ -1,8 +1,11 @@
 #!/bin/bash
-# Calculates and exports CHAT_TRACE_URL based on current oc project
+# Calculates and exports CHAT_TRACE_URL based on current agentic-userN project
 # Usage: source ./get-agent-route-as-student.sh
 #
 # Exports: CHAT_TRACE_URL
+#
+# Constructs URL like:
+#   https://chatbot-8002-showroom-bwpcf-1-user3.apps.cluster-bwpcf.dynamic.redhatworkshops.io/
 
 # Get current namespace from oc project
 NAMESPACE=$(oc project -q 2>/dev/null)
@@ -19,34 +22,34 @@ if [ -z "$NAMESPACE" ]; then
     exit 1
 fi
 
-# Extract cluster ID from namespace pattern
-# e.g., showroom-s5kx7-1-user1 -> s5kx7
-#       agentic-user1 -> need to find showroom namespace
-if [[ "$NAMESPACE" =~ ^showroom-([^-]+)-.* ]]; then
-    CLUSTER_ID="${BASH_REMATCH[1]}"
-    SHOWROOM_NAMESPACE="$NAMESPACE"
-elif [[ "$NAMESPACE" =~ ^agentic-(.+)$ ]]; then
+echo "Namespace: $NAMESPACE"
+
+# Extract user from namespace (e.g., agentic-user3 -> user3)
+if [[ "$NAMESPACE" =~ ^agentic-(.+)$ ]]; then
     USER="${BASH_REMATCH[1]}"
-    # Try to find showroom namespace for this user
-    SHOWROOM_NAMESPACE=$(oc get projects --no-headers 2>/dev/null | grep "showroom.*${USER}" | awk '{print $1}' | head -1)
-    if [ -z "$SHOWROOM_NAMESPACE" ]; then
-        echo "Error: Could not find showroom namespace for $USER"
-        exit 1
-    fi
-    CLUSTER_ID=$(echo "$SHOWROOM_NAMESPACE" | sed -n 's/^showroom-\([^-]*\)-.*/\1/p')
 else
-    echo "Error: Namespace '$NAMESPACE' does not match expected pattern"
-    echo "Expected: showroom-<cluster>-<n>-<user> or agentic-<user>"
+    echo "Error: Namespace '$NAMESPACE' does not match expected pattern agentic-<user>"
     exit 1
 fi
+
+# Get cluster ID from existing route (e.g., apps.cluster-bwpcf.dynamic... -> bwpcf)
+ROUTE_HOST=$(oc get routes -o jsonpath='{.items[0].spec.host}' 2>/dev/null)
+
+if [ -z "$ROUTE_HOST" ]; then
+    echo "Error: No routes found in namespace"
+    exit 1
+fi
+
+CLUSTER_ID=$(echo "$ROUTE_HOST" | sed -n 's/.*\.apps\.cluster-\([^.]*\)\..*/\1/p')
 
 if [ -z "$CLUSTER_ID" ]; then
-    echo "Error: Could not extract cluster ID from namespace"
+    echo "Error: Could not extract cluster ID from route: $ROUTE_HOST"
     exit 1
 fi
 
-BASE_DOMAIN="apps.cluster-${CLUSTER_ID}.dynamic.redhatworkshops.io"
-CHAT_TRACE_URL="https://chatbot-8002-${SHOWROOM_NAMESPACE}.${BASE_DOMAIN}"
+# Construct showroom namespace and URL
+SHOWROOM_NAMESPACE="showroom-${CLUSTER_ID}-1-${USER}"
+CHAT_TRACE_URL="https://chatbot-8002-${SHOWROOM_NAMESPACE}.apps.cluster-${CLUSTER_ID}.dynamic.redhatworkshops.io/"
 
 export CHAT_TRACE_URL
 

@@ -2,35 +2,21 @@
 # Reset/clear all traces from Langfuse using the Langfuse API
 # Usage: ./reset-langfuse-traces.sh
 #
-# Reads credentials from ./langgraph-agent/backend/.env:
-#   LANGFUSE_HOST, LANGFUSE_PUBLIC_KEY, LANGFUSE_SECRET_KEY
+# Required environment variables:
+#   LANGFUSE_PUBLIC_KEY - Public API key (pk-lf-...)
+#   LANGFUSE_SECRET_KEY - Secret API key (sk-lf-...)
+#   LANGFUSE_HOST       - Langfuse URL (https://...)
 #
 # WARNING: This will DELETE ALL traces from Langfuse!
 
 set -e
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ENV_FILE="${SCRIPT_DIR}/langgraph-agent/backend/.env"
-
-# Load environment variables from .env file
-if [ ! -f "$ENV_FILE" ]; then
-    echo "Error: .env file not found at $ENV_FILE"
-    exit 1
-fi
-
-# Source the .env file (handles KEY=value format)
-set -a
-source "$ENV_FILE"
-set +a
-
-# Validate required variables
-if [ -z "$LANGFUSE_HOST" ]; then
-    echo "Error: LANGFUSE_HOST not set in $ENV_FILE"
-    exit 1
-fi
-
-if [ -z "$LANGFUSE_PUBLIC_KEY" ] || [ -z "$LANGFUSE_SECRET_KEY" ]; then
-    echo "Error: LANGFUSE_PUBLIC_KEY and LANGFUSE_SECRET_KEY must be set in $ENV_FILE"
+if [ -z "$LANGFUSE_PUBLIC_KEY" ] || [ -z "$LANGFUSE_SECRET_KEY" ] || [ -z "$LANGFUSE_HOST" ]; then
+    echo "Error: Missing Langfuse credentials"
+    echo "Required environment variables:"
+    echo "  LANGFUSE_PUBLIC_KEY"
+    echo "  LANGFUSE_SECRET_KEY"
+    echo "  LANGFUSE_HOST"
     exit 1
 fi
 

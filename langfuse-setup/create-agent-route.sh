@@ -1,9 +1,11 @@
 #!/bin/bash
 # Creates a Service and Route for port 8002 from inside a showroom pod
-# Usage: ./create-route.sh [showroom-name]
-# Example: ./create-route.sh showroom-97v4s-1-user2
+# Usage: ./create-agent-route.sh <showroom-name> [base-domain]
+# Example: ./create-agent-route.sh showroom-97v4s-1-user2
+# Example: ./create-agent-route.sh showroom-m7dw5-1-user1 apps.cluster-m7dw5.dynamic.redhatworkshops.io
 #
 # If no showroom name is provided, it will use the current namespace
+# If no base domain is provided, it will try to auto-detect
 
 set -e
 
@@ -22,23 +24,40 @@ fi
 
 if [ -z "$SHOWROOM_NAME" ]; then
     echo "Error: Could not determine showroom name"
-    echo "Usage: $0 <showroom-name>"
+    echo "Usage: $0 <showroom-name> [base-domain]"
     echo "Example: $0 showroom-97v4s-1-user2"
+    echo "Example: $0 showroom-m7dw5-1-user1 apps.cluster-m7dw5.dynamic.redhatworkshops.io"
     exit 1
 fi
 
 echo "Using showroom/namespace: $SHOWROOM_NAME"
 
-# Get the cluster's base domain
-BASE_DOMAIN=$(oc get ingresses.config.openshift.io cluster -o jsonpath='{.spec.domain}' 2>/dev/null)
+# Get base domain from argument or try to auto-detect
+if [ -n "$2" ]; then
+    BASE_DOMAIN="$2"
+else
+    # Try to get the cluster's base domain
+    BASE_DOMAIN=$(oc get ingresses.config.openshift.io cluster -o jsonpath='{.spec.domain}' 2>/dev/null || true)
 
-if [ -z "$BASE_DOMAIN" ]; then
-    # Fallback: try to get from existing routes
-    BASE_DOMAIN=$(oc get routes -n "$SHOWROOM_NAME" -o jsonpath='{.items[0].spec.host}' 2>/dev/null | sed 's/^[^.]*\.//')
+    if [ -z "$BASE_DOMAIN" ]; then
+        # Fallback: try to get from existing routes
+        BASE_DOMAIN=$(oc get routes -n "$SHOWROOM_NAME" -o jsonpath='{.items[0].spec.host}' 2>/dev/null | sed 's/^[^.]*\.//' || true)
+    fi
+
+    if [ -z "$BASE_DOMAIN" ]; then
+        # Fallback: try to extract from showroom name pattern (e.g., showroom-m7dw5-1-user1 -> apps.cluster-m7dw5.dynamic.redhatworkshops.io)
+        CLUSTER_ID=$(echo "$SHOWROOM_NAME" | sed -n 's/^showroom-\([^-]*\)-.*/\1/p')
+        if [ -n "$CLUSTER_ID" ]; then
+            BASE_DOMAIN="apps.cluster-${CLUSTER_ID}.dynamic.redhatworkshops.io"
+            echo "Auto-detected base domain from showroom name: $BASE_DOMAIN"
+        fi
+    fi
 fi
 
 if [ -z "$BASE_DOMAIN" ]; then
     echo "Error: Could not determine cluster base domain"
+    echo "Please provide it as the second argument:"
+    echo "  $0 $SHOWROOM_NAME <base-domain>"
     exit 1
 fi
 

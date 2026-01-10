@@ -25,7 +25,7 @@ echo ""
 
 curl -s -u "${LANGFUSE_PUBLIC_KEY}:${LANGFUSE_SECRET_KEY}" \
     "${LANGFUSE_HOST}/api/public/traces?limit=${COUNT}" | \
-python3 -c "
+python -c "
 import sys, json
 
 try:

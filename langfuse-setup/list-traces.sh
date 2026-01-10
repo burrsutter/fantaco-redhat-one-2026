@@ -3,22 +3,18 @@
 # List the last N traces with their IDs and user queries
 # Usage: ./list-traces.sh [count]
 #        Default: 10 traces
-
-# Load environment variables from .env file
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ENV_FILE="${SCRIPT_DIR}/langgraph-agent/backend/.env"
-
-if [ -f "$ENV_FILE" ]; then
-    LANGFUSE_PUBLIC_KEY=$(grep "^LANGFUSE_PUBLIC_KEY" "$ENV_FILE" | cut -d'=' -f2 | tr -d '"')
-    LANGFUSE_SECRET_KEY=$(grep "^LANGFUSE_SECRET_KEY" "$ENV_FILE" | cut -d'=' -f2 | tr -d '"')
-    LANGFUSE_HOST=$(grep "^LANGFUSE_HOST" "$ENV_FILE" | cut -d'=' -f2 | tr -d '"')
-else
-    echo "Error: .env file not found at $ENV_FILE"
-    exit 1
-fi
+#
+# Required environment variables:
+#   LANGFUSE_PUBLIC_KEY - Public API key (pk-lf-...)
+#   LANGFUSE_SECRET_KEY - Secret API key (sk-lf-...)
+#   LANGFUSE_HOST       - Langfuse URL (https://...)
 
 if [ -z "$LANGFUSE_PUBLIC_KEY" ] || [ -z "$LANGFUSE_SECRET_KEY" ] || [ -z "$LANGFUSE_HOST" ]; then
     echo "Error: Missing Langfuse credentials"
+    echo "Required environment variables:"
+    echo "  LANGFUSE_PUBLIC_KEY"
+    echo "  LANGFUSE_SECRET_KEY"
+    echo "  LANGFUSE_HOST"
     exit 1
 fi
 

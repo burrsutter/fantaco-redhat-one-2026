@@ -1,7 +1,6 @@
 #!/bin/bash
-# Creates the Langfuse Route and exports LANGFUSE_URL
+# Creates the Langfuse Route and exports LANGFUSE_HOST and LANGFUSE_URL
 # Usage: source ./create-langfuse-url.sh
-#   or:  export LANGFUSE_URL=$(./create-langfuse-url.sh)
 
 # Get current namespace from oc project
 NAMESPACE=$(oc project -q)
@@ -57,12 +56,15 @@ echo "Route created:"
 oc get route langfuse -n "$NAMESPACE"
 echo ""
 
-# If sourced, export the variable; if executed, print the URL
+# If sourced, export the variables; if executed, print them
 if [[ "${BASH_SOURCE[0]}" != "${0}" ]]; then
     # Script is being sourced
+    export LANGFUSE_HOST
     export LANGFUSE_URL
+    echo "Exported LANGFUSE_HOST=${LANGFUSE_HOST}"
     echo "Exported LANGFUSE_URL=${LANGFUSE_URL}"
 else
-    # Script is being executed - only output the URL on the last line for capture
+    # Script is being executed
+    echo "LANGFUSE_HOST=${LANGFUSE_HOST}"
     echo "LANGFUSE_URL=${LANGFUSE_URL}"
 fi

@@ -1,7 +1,7 @@
 #!/bin/bash
-# Get the Langfuse URL for the current namespace
-# Usage: source ./get-langfuse-url.sh
-#   or:  export LANGFUSE_URL=$(./get-langfuse-url.sh)
+# Creates the Langfuse Route and exports LANGFUSE_URL
+# Usage: source ./create-langfuse-url.sh
+#   or:  export LANGFUSE_URL=$(./create-langfuse-url.sh)
 
 # Get current namespace from oc project
 NAMESPACE=$(oc project -q)
@@ -10,6 +10,8 @@ if [ -z "$NAMESPACE" ]; then
     echo "Make sure you are logged in and have a project selected" >&2
     exit 1
 fi
+
+echo "Using namespace: $NAMESPACE"
 
 # Get the cluster's base domain
 BASE_DOMAIN=$(oc get ingresses.config.openshift.io cluster -o jsonpath='{.spec.domain}' 2>/dev/null)
@@ -25,7 +27,35 @@ if [ -z "$BASE_DOMAIN" ]; then
 fi
 
 # Construct the Langfuse URL
-LANGFUSE_URL="https://langfuse-${NAMESPACE}.${BASE_DOMAIN}"
+LANGFUSE_HOST="langfuse-${NAMESPACE}.${BASE_DOMAIN}"
+LANGFUSE_URL="https://${LANGFUSE_HOST}"
+
+echo "Creating Langfuse Route..."
+echo "Host will be: $LANGFUSE_URL"
+
+# Create the Route (points to langfuse-web Service that Helm will create)
+oc apply -n "$NAMESPACE" -f - <<EOF
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: langfuse
+spec:
+  host: ${LANGFUSE_HOST}
+  port:
+    targetPort: 3000
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect
+  to:
+    kind: Service
+    name: langfuse-web
+    weight: 100
+EOF
+
+echo ""
+echo "Route created:"
+oc get route langfuse -n "$NAMESPACE"
+echo ""
 
 # If sourced, export the variable; if executed, print the URL
 if [[ "${BASH_SOURCE[0]}" != "${0}" ]]; then
@@ -33,6 +63,6 @@ if [[ "${BASH_SOURCE[0]}" != "${0}" ]]; then
     export LANGFUSE_URL
     echo "Exported LANGFUSE_URL=${LANGFUSE_URL}"
 else
-    # Script is being executed
-    echo "$LANGFUSE_URL"
+    # Script is being executed - only output the URL on the last line for capture
+    echo "LANGFUSE_URL=${LANGFUSE_URL}"
 fi

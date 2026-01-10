@@ -1,9 +1,14 @@
 #!/bin/bash
 # Fix ClickHouse nondeterministic mutations error for Langfuse trace deletion
-# Usage: ./fix-clickhouse-mutations.sh [namespace]
-# Default namespace: langfuse
+# Uses the current oc project - no arguments needed
 
-NAMESPACE="${1:-langfuse}"
+# Get current namespace from oc project
+NAMESPACE=$(oc project -q)
+if [ -z "$NAMESPACE" ]; then
+    echo "Error: Could not determine current namespace"
+    echo "Make sure you are logged in and have a project selected"
+    exit 1
+fi
 
 echo "Patching ClickHouse ConfigMap in namespace: $NAMESPACE"
 

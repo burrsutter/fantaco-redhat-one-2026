@@ -18,8 +18,8 @@ postgresql:
       userPasswordKey: password
 
 clickhouse:
-  # For single-user/demo: use 1 replica instead of 3
-  # replicaCount: 1
+  # Single-user: 1 replica instead of 3 (saves 2 pods)
+  replicaCount: 1
   auth:
     existingSecret: langfuse-clickhouse-auth
     existingSecretKey: password
@@ -33,9 +33,9 @@ clickhouse:
           </default>
         </profiles>
       </clickhouse>
-  # For single-user/demo: use 1 ZooKeeper replica instead of 3
-  # zookeeper:
-  #   replicaCount: 1
+  # Single-user: 1 ZooKeeper replica instead of 3 (saves 2 pods)
+  zookeeper:
+    replicaCount: 1
 
 redis:
   auth:

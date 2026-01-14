@@ -1,14 +1,16 @@
-= How to configure the workshop cluster to support the RAG Quickstart
+# How to configure the workshop cluster to support the RAG Quickstart
 
 
-== Prerequisites
+## Prerequisites
 
 * Know your MaaS URL and API key
 * Must be Cluster Admin
+* The RAG Quickstart uses RHOAI Pipelines, those will be enabled below
+
 
 Look for the following but "filled in" in 02-llamastack.adoc within the demo cluster. 
 
-== Steps
+## Steps
 
 ```bash
 curl -sS {litellm_api_base_url}/models   -H "Authorization: Bearer {litellm_virtual_key}" | jq
@@ -55,6 +57,8 @@ NAME          READY   REASON
 default-dsc   True
 ```
 
+By default the workshop clusters have AI Pipelines disabled (aka "Removed")
+
 ```bash
 echo "aipipelines: $(oc get datasciencecluster default-dsc -o jsonpath='{.spec.components.aipipelines.managementState}')"
 ```
@@ -62,6 +66,9 @@ echo "aipipelines: $(oc get datasciencecluster default-dsc -o jsonpath='{.spec.c
 ```
 aipipelines: Removed
 ```
+
+Patch to enable (aka "Managed")
+
 
 ```bash
 oc patch datasciencecluster default-dsc --type='json' -p '[{"op":"replace","path":"/spec/components/aipipelines/managementState","value":"Managed"}]'
@@ -79,6 +86,8 @@ echo "aipipelines: $(oc get datasciencecluster default-dsc -o jsonpath='{.spec.c
 aipipelines: Managed
 ```
 
+Also verify the `argoWorkflowsControllers`
+
 ```bash
 echo "argoWorkflowsControllers: $(oc get datasciencecluster default-dsc -o jsonpath='{.spec.components.aipipelines.argoWorkflowsControllers.managementState}')"
 ```
@@ -86,6 +95,8 @@ echo "argoWorkflowsControllers: $(oc get datasciencecluster default-dsc -o jsonp
 ```
 argoWorkflowsControllers: Removed
 ```
+
+And patch the `argoWorkflowsControllers`
 
 ```bash
 oc patch datasciencecluster default-dsc --type='merge' -p '{"spec":{"components":{"aipipelines":{"managementState":"Managed","argoWorkflowsControllers":{"managementState":"Managed"}}}}}'
@@ -95,6 +106,7 @@ oc patch datasciencecluster default-dsc --type='merge' -p '{"spec":{"components"
 argoWorkflowsControllers: Managed
 ```
 
+CRDs
 
 ```bash
 oc get crd | grep datasciencepipelines
@@ -104,6 +116,8 @@ oc get crd | grep datasciencepipelines
 datasciencepipelines.components.platform.opendatahub.io                            2026-01-14T21:58:32Z
 datasciencepipelinesapplications.datasciencepipelinesapplications.opendatahub.io   2026-01-14T23:22:23Z
 ```
+
+And a new pod
 
 ```bash
 oc get pods -n redhat-ods-applications
@@ -124,7 +138,7 @@ rhods-dashboard-6c8744b89-spd9n                                   4/4     Runnin
 ```
 
 
-or 
+or the GUI way
 
 ![RHOAI DSC](images/RHOAI_DSC_1.png)
 
@@ -187,15 +201,19 @@ Edit rag-values.yaml
 
 ```
 
+== Install
 
 ```bash
 make install NAMESPACE=rag-quickstart
 ```
 
+Since we are using the MaaS, the Huggingface token is optional
+
 Press Enter for Huggingface id
 
-Press Enter for Tavily id 
+The Tavily key is also optional 
 
+Press Enter for Tavily id 
 
 
 ```bash
@@ -226,6 +244,7 @@ rag-pipeline-notebook-0                                 1/1     Running         
 upload-sample-docs-job-2xdnj                            1/1     Running             0          89s
 ```
 
+Look at the Llama Stack pod specifically
 
 ```bash
 oc get pod -l app.kubernetes.io/name=llamastack
@@ -235,6 +254,8 @@ oc get pod -l app.kubernetes.io/name=llamastack
 NAME                          READY   STATUS    RESTARTS   AGE
 llamastack-59ddd96b7c-tfm8m   1/1     Running   0          1m27s
 ```
+
+And the RAG pod, the one with the application inside
 
 
 ```bash
@@ -246,6 +267,7 @@ NAME                   READY   STATUS    RESTARTS   AGE
 rag-66b4f66fcb-v7lf7   1/1     Running   0          1m28s
 ```
 
+Get the URL to the RAG GUI
 
 ```bash
 export RAG_GUI=https://$(oc get routes -l app.kubernetes.io/name=rag -o jsonpath="{range .items[*]}{.status.ingress[0].host}{end}")
@@ -256,6 +278,8 @@ echo $RAG_GUI
 ![RAG GUI](images/RAG_GUI_1.png)
 
 ![RAG GUI](images/RAG_GUI_2.png)
+
+Drag & Drop in a document
 
 ![New Vector DB](images/New_Vector_DB_DnD_1.png)
 
@@ -271,8 +295,7 @@ echo $RAG_GUI
 
 ![RAG HR Benefits](images/RAG_HR_Benefits_2.png)
 
-
-If you had provided your Tavily key
+If you had provided your Tavily key, you can test the Web Search tool
 
 ![Tavily](images/tavily_key_1.png)
 

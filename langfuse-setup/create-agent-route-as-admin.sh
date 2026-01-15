@@ -1,42 +1,35 @@
 #!/bin/bash
-# Creates a Service and Route for port 8002 as cluster admin
-# Usage: ./create-agent-route-as-admin.sh <user>
-# Example: ./create-agent-route-as-admin.sh user1
+# Creates a Service and Route for port 8002 as cluster admin for ALL users
+# Usage: ./create-agent-route-as-admin.sh
 #
-# This script discovers the showroom namespace for the given user
-# and creates the necessary Service and Route resources.
+# This script discovers all showroom namespaces containing "user" in the name
+# and creates the necessary Service and Route resources for each.
 
-set -e
+echo "Discovering all showroom namespaces with 'user' in the name..."
 
-if [ -z "$1" ]; then
-    echo "Error: User argument required"
-    echo "Usage: $0 <user>"
-    echo "Example: $0 user1"
-    exit 1
-fi
+# Find all showroom namespaces with "user" in the name
+SHOWROOM_NAMESPACES=$(oc get projects --no-headers 2>/dev/null | grep "showroom.*user" | awk '{print $1}')
 
-USER="$1"
-
-echo "Looking for showroom namespace for: $USER"
-
-# Discover the showroom namespace for this user
-SHOWROOM_NAMESPACE=$(oc get projects --no-headers 2>/dev/null | grep "showroom.*${USER}" | awk '{print $1}' | head -1)
-
-if [ -z "$SHOWROOM_NAMESPACE" ]; then
-    echo "Error: Could not find showroom namespace for $USER"
+if [ -z "$SHOWROOM_NAMESPACES" ]; then
+    echo "Error: No showroom namespaces found with 'user' in the name"
     echo "Available showroom projects:"
     oc get projects --no-headers 2>/dev/null | grep "showroom" || echo "  No showroom projects found"
     exit 1
 fi
 
-echo "Found namespace: $SHOWROOM_NAMESPACE"
+# Count namespaces
+NAMESPACE_COUNT=$(echo "$SHOWROOM_NAMESPACES" | wc -l | tr -d ' ')
+echo "Found $NAMESPACE_COUNT showroom namespace(s):"
+echo "$SHOWROOM_NAMESPACES" | sed 's/^/  /'
+echo ""
 
-# Get the cluster's base domain
+# Get the cluster's base domain (only need to do this once)
 BASE_DOMAIN=$(oc get ingresses.config.openshift.io cluster -o jsonpath='{.spec.domain}' 2>/dev/null || true)
 
 if [ -z "$BASE_DOMAIN" ]; then
-    # Fallback: try to extract from namespace pattern (e.g., showroom-m7dw5-1-user1 -> apps.cluster-m7dw5.dynamic.redhatworkshops.io)
-    CLUSTER_ID=$(echo "$SHOWROOM_NAMESPACE" | sed -n 's/^showroom-\([^-]*\)-.*/\1/p')
+    # Fallback: try to extract from first namespace pattern (e.g., showroom-m7dw5-1-user1 -> apps.cluster-m7dw5.dynamic.redhatworkshops.io)
+    FIRST_NAMESPACE=$(echo "$SHOWROOM_NAMESPACES" | head -1)
+    CLUSTER_ID=$(echo "$FIRST_NAMESPACE" | sed -n 's/^showroom-\([^-]*\)-.*/\1/p')
     if [ -n "$CLUSTER_ID" ]; then
         BASE_DOMAIN="apps.cluster-${CLUSTER_ID}.dynamic.redhatworkshops.io"
         echo "Auto-detected base domain: $BASE_DOMAIN"
@@ -48,13 +41,21 @@ if [ -z "$BASE_DOMAIN" ]; then
     exit 1
 fi
 
-ROUTE_HOST="chatbot-8002-${SHOWROOM_NAMESPACE}.${BASE_DOMAIN}"
+# Track results
+SUCCESS_COUNT=0
+FAIL_COUNT=0
+CREATED_URLS=()
 
-echo "Creating Service and Route..."
-echo "Route will be: https://${ROUTE_HOST}"
+# Loop through each namespace and create Service/Route
+for SHOWROOM_NAMESPACE in $SHOWROOM_NAMESPACES; do
+    echo "----------------------------------------"
+    echo "Processing: $SHOWROOM_NAMESPACE"
 
-# Create the Service
-oc apply -n "$SHOWROOM_NAMESPACE" -f - <<EOF
+    ROUTE_HOST="chatbot-8002-${SHOWROOM_NAMESPACE}.${BASE_DOMAIN}"
+    echo "Route will be: https://${ROUTE_HOST}"
+
+    # Create the Service
+    if oc apply -n "$SHOWROOM_NAMESPACE" -f - <<EOF
 apiVersion: v1
 kind: Service
 metadata:
@@ -67,9 +68,9 @@ spec:
       targetPort: 8002
       protocol: TCP
 EOF
-
-# Create the Route
-oc apply -n "$SHOWROOM_NAMESPACE" -f - <<EOF
+    then
+        # Create the Route
+        if oc apply -n "$SHOWROOM_NAMESPACE" -f - <<EOF
 apiVersion: route.openshift.io/v1
 kind: Route
 metadata:
@@ -86,11 +87,30 @@ spec:
     name: chatbot-8002
     weight: 100
 EOF
-
-CHAT_TRACE_URL="https://${ROUTE_HOST}"
+        then
+            echo "SUCCESS: Created route for $SHOWROOM_NAMESPACE"
+            SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
+            CREATED_URLS+=("https://${ROUTE_HOST}")
+        else
+            echo "FAILED: Could not create Route for $SHOWROOM_NAMESPACE"
+            FAIL_COUNT=$((FAIL_COUNT + 1))
+        fi
+    else
+        echo "FAILED: Could not create Service for $SHOWROOM_NAMESPACE"
+        FAIL_COUNT=$((FAIL_COUNT + 1))
+    fi
+done
 
 echo ""
-echo "Done! Access the chatbot at:"
-echo "${CHAT_TRACE_URL}"
+echo "========================================"
+echo "Summary:"
+echo "  Successful: $SUCCESS_COUNT"
+echo "  Failed: $FAIL_COUNT"
 echo ""
-echo "Test with: curl ${CHAT_TRACE_URL}/health"
+
+if [ ${#CREATED_URLS[@]} -gt 0 ]; then
+    echo "Created URLs:"
+    for url in "${CREATED_URLS[@]}"; do
+        echo "  $url"
+    done
+fi

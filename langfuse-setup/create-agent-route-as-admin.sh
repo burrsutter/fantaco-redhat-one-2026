@@ -41,6 +41,23 @@ if [ -z "$BASE_DOMAIN" ]; then
     exit 1
 fi
 
+# Preview the routes that will be created
+echo "The following routes will be created:"
+echo ""
+for ns in $SHOWROOM_NAMESPACES; do
+    echo "  https://chatbot-8002-${ns}.${BASE_DOMAIN}"
+done
+echo ""
+
+# Prompt for confirmation
+read -p "Proceed with creating these routes? (y/N): " CONFIRM
+if [[ ! "$CONFIRM" =~ ^[Yy]$ ]]; then
+    echo "Aborted."
+    exit 0
+fi
+
+echo ""
+
 # Track results
 SUCCESS_COUNT=0
 FAIL_COUNT=0

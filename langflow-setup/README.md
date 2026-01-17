@@ -1,8 +1,54 @@
 # Langflow
 
+
+## Localhost Installation
+
+```bash
+python3.12 -m venv .venv
+source .venv/bin/activate
+```
+
+```bash
+python -V
+uv run python -V
+```
+
+```
+Python 3.12.12
+```
+
+```
+pip install langflow==1.7.1
+```
+
+or
+
+```bash
+pip install -r requirements.txt
+```
+
+```bash
+langflow --version
+```
+
+```
+Langflow version: 1.7.1
+```
+
+```bash
+langflow run
+```
+
+```bash
+export LANGFLOW_URL=http://localhost:7860
+open $LANGFLOW_URL
+```
+
+## OpenShift Installation 
+
 As Cluster Admin
 
-## Installation 
+
 ```bash
 helm repo add langflow https://langflow-ai.github.io/langflow-helm-charts
 helm repo update
@@ -67,15 +113,14 @@ Swagger/OpenAPI
 open $LANGFLOW_DOCS_URL/docs
 ```
 
-
-### Optional: Claude Code 
+### API Keys and Claude Code 
 
 Go into Settings, API Keys to give Claude Code access to Langflow
 
 ![Langflow API Keys](images/langflow-api-keys.png)
 
 ```bash
-export LANGFLOW_API_KEY=sk-vkJtkTO6Rjveq2rLwZauICtpuSH_c1GgZyCAb52-D9k
+export LANGFLOW_API_KEY=sk-_1PBprunQLLzbhMsWtYh_ex-BxCEyVqR1HQP4d52EN4
 ```
 
 
@@ -119,13 +164,35 @@ Using this icon to get back to the list of all projects and flows
 ![Langflow UI](images/langflow-10.png)
 
 
+## Ollama
+
+```bash
+ollama serve
+```
+
+```bash
+ollama pull qwen3:14b-q8_0
+```
+
+
+Ollama Server URL
+
+```
+http://localhost:11434
+```
+
+![Langflow Ollama UI](images/langflow-ollama-1.png)
+
+![Langflow Ollama UI](images/langflow-ollama-2.png)
+
+![Langflow Ollama UI](images/langflow-ollama-3.png)
 
 ## vLLM 
 
 
   For an LLM-powered hello world:
 
-![Langflow UI](images/langflow-llm-1.png)
+![Langflow vLLM UI](images/langflow-llm-1.png)
 
 Basic Flow
 
@@ -204,6 +271,11 @@ curl -s --compressed -X POST \
 ```
 
 ## MCP
+
+### Localhost MCP
+
+
+### OpenShift hosted MCP 
 
 ```bash
 export NAMESPACE=agentic-user1

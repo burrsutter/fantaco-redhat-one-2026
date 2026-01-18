@@ -41,9 +41,11 @@ langflow run
 
 ```bash
 export LANGFLOW_URL=http://localhost:7860
-open $LANGFLOW_URL
-
 export LANGFLOW_DOCS_URL=http://localhost:7860/docs
+```
+
+```bash
+open $LANGFLOW_URL
 open $LANGFLOW_DOCS_URL
 ```
 
@@ -128,7 +130,7 @@ Go into Settings, API Keys to give Claude Code access to Langflow
 
 
 ```bash
-export LANGFLOW_API_KEY=sk-Cf4qdPkKlsd96y0bPB7p9nfBfCxyFRZlKWACurO5Vzk
+export LANGFLOW_API_KEY=sk-jCbsqGPRE3FqqEPlvwcpqpi7-u7A_WxsTCir3J9kFFk
 ```
 
 Provide LANGFLOW_URL, LANGFLOW_DOCS_URL and LANGFLOW_API_KEY as context to your coding agent (e.g. Claude Code) means it can help you debug problems with your flows.  
@@ -180,7 +182,7 @@ You can use the ellipses **...** on the Project or Flow to make changes such as 
 
 ## vLLM MaaS
 
-Langflow does **NOT** have an out-of-the-box (OOTB) Component that works with vLLM via MaaS.  Where you need to override:
+Langflow does **NOT** have an out-of-the-box (OOTB) Component that works with vLLM via MaaS where you need to override:
 
 * API URL 
 * API Key
@@ -210,7 +212,11 @@ API Key
 sk-dV5UNeAWHskJK
 ```
 
-Therefore we have a custom component. Click **+New Custom Component**
+**+ New Flow**
+
+**+ Blank Flow**
+
+We have a custom component. Click **+New Custom Component**
 
 ![vLLM](images/vllm-custom-component-1.png)
 
@@ -244,11 +250,15 @@ Click **Playground**
 
 ## Agent with vLLM
 
-Remove Chat Input and Chat Output (for now).  Change the output to be "Language Model" and find "Agent" in the list of Components
+Remove Chat Input and Chat Output (for now).  Find "Agent" in the list of Components
 
 ![vLLM Agent](images/vllm-agent-1.png)
 
 Add an Agent 
+
+Change the output of the vLLM Model Component to be "Language Model" 
+
+And
 
 Click on "Model Provider"
 
@@ -272,6 +282,10 @@ Add Chat Input and Chat Output to the Agent
 
 Add MCP Component for Customer
 
+Drag **MCP Tools** Component to the canvas
+
+Click on **Select a server...**
+
 ![vLLM Agent](images/vllm-agent-6.png)
 
 Click **+ Add MCP Server**
@@ -286,6 +300,8 @@ Streamable HTTP/SSE URL
 
 http://localhost:9001/mcp
 
+or your OpenShift hosted endpoint
+
 Click **Add Server**
 
 ![vLLM Agent](images/vllm-agent-8.png)
@@ -299,6 +315,12 @@ When Response switches to Toolset, you can then connect it to the Agents Tools i
 ![vLLM Agent](images/vllm-agent-10.png)
 
 Playground and test with "who does Thomas Hardy work for?"
+
+Remember, you are dealing with a LLM and it non-determinstic behavior. In some cases, this query will result in 
+
+"Thomas Hardy was an English novelist and poet, best known for his works such as Tess of the d'Urbervilles and Far from the Madding Crowd. He was a prolific writer during the 19th and early 20th centuries. As he passed away in 1928, he does not work for anyone today. If you're referring to a different person named Thomas Hardy, feel free to clarify!"
+
+Keep going
 
 ![vLLM Agent](images/vllm-agent-11.png)
 
@@ -318,6 +340,8 @@ Streamable HTTP/SSE URL
 
 http://localhost:9002/mcp
 
+or your OpenShift hosted endpoint
+
 Click **Add Server**
 
 ![vLLM Agent](images/vllm-agent-14.png)
@@ -333,6 +357,9 @@ Connect MCP Servers to Agent Tools input
 What are the orders for Thomas Hardy?
 
 ![vLLM Agent](images/vllm-agent-17.png)
+
+
+To help the Agent out, especially when using smaller open models, you need a better System Prompt
 
 Add **Agent Instructions**
 
@@ -372,7 +399,7 @@ Make sure your LANGFLOW_URL, LANGFLOW_API_KEY, and LANGFLOW_FLOW_ID are set corr
 
 ```bash 
 export LANGFLOW_URL=http://localhost:7860
-export LANGFLOW_API_KEY=sk-mit3KZiwrvstfEoisyhZgf3pyy65SxQ-6NJAxZIiVlc
+export LANGFLOW_API_KEY=sk-jCbsqGPRE3FqqEPlvwcpqpi7-u7A_WxsTCir3J9kFFk
 export LANGFLOW_FLOW_ID=aa5bb21b-2d71-4ffb-90de-540074f5d461
 ```
 
@@ -501,6 +528,10 @@ curl -s --compressed -X POST \
     -d @flow_examples/vLLM_MaaS_Agent_MCP_Customer_Finance.json
 ```
 
+Make sure to re-enter the API Key
+
+![After Import](images/after-import-1.png)
+
 ## MCP Servers
 
 ### Localhost MCP
@@ -603,28 +634,8 @@ https://mcp-finance-route-agentic-user5.apps.cluster-q5gsb.dynamic.redhatworksho
 ```
 
 
-## Langflow API Examples
+## Langflow API 
 
-```
-curl -s --compressed -X GET \
-    "${LANGFLOW_URL}/api/v1/flows/?get_all=true" \
-    -H "accept: application/json" \
-    -H "x-api-key: ${LANGFLOW_API_KEY}" | jq '.[] | {id: .id, name: .name}'
-```
-
-## Debugging
-
-#### Get build logs for a specific flow
-```bash
-curl -s --compressed "${LANGFLOW_URL}/api/v1/monitor/builds?flow_id=YOUR_FLOW_ID" \
-  -H "x-api-key: ${LANGFLOW_API_KEY}" | jq '.'
-```  
-
-#### Get messages for a session
-```bash
-curl -s --compressed "${LANGFLOW_URL}/api/v1/monitor/messages/session/YOUR_SESSION_ID" \
-  -H "x-api-key: ${LANGFLOW_API_KEY}" | jq '.'
-```  
 
 #### List all flows
 ```bash
@@ -634,13 +645,60 @@ curl -s --compressed -X GET \
   -H "x-api-key: ${LANGFLOW_API_KEY}" | jq '.[] | {id: .id, name: .name}'
 ```
 
-#### List all components
-```bash
-curl -s --compressed -X GET \
-  "${LANGFLOW_URL}/api/v1/store/components/" \
-  -H "accept: application/json" \
-  -H "x-api-key: ${LANGFLOW_API_KEY}" | jq '.results[] | {name: .name, description: .description}'
+
 ```
+{
+  "id": "2ee6a0f1-649e-4972-9dd3-800fef17dd3f",
+  "name": "Hello World"
+}
+{
+  "id": "ed738a05-b1c2-4c80-b244-3c176f8e35a6",
+  "name": "vLLM_MaaS_Agent_MCP_Customer_Finance"
+}
+```
+
+```bash
+export LANGFLOW_URL=http://localhost:7860
+export LANGFLOW_API_KEY=sk-jCbsqGPRE3FqqEPlvwcpqpi7-u7A_WxsTCir3J9kFFk
+export LANGFLOW_FLOW_ID=ed738a05-b1c2-4c80-b244-3c176f8e35a6
+```
+
+#### List all components on a flow
+```bash
+curl -s -H "x-api-key: $LANGFLOW_API_KEY" "${LANGFLOW_URL}/api/v1/flows/$LANGFLOW_FLOW_ID" | jq '.data.nodes[] | {id: .id, type: .data.type}'
+```
+
+```bash
+curl -s -H "x-api-key: $LANGFLOW_API_KEY" "${LANGFLOW_URL}/api/v1/flows/$LANGFLOW_FLOW_ID" | jq '.data.nodes[] | {id: .id, type: .data.node.display_name}'
+```
+
+
+#### Get messages for a flow
+```bash
+curl -s -H "x-api-key: ${LANGFLOW_API_KEY}" "${LANGFLOW_URL}/api/v1/monitor/messages?flow_id=$LANGFLOW_FLOW_ID" | jq '.'
+```  
+
+#### Get a list of sessions
+```bash
+curl -s -H "x-api-key: ${LANGFLOW_API_KEY}" "${LANGFLOW_URL}/api/v1/monitor/messages/sessions?flow_id=$LANGFLOW_FLOW_ID" | jq '.'
+```
+
+```
+[
+  "ed738a05-b1c2-4c80-b244-3c176f8e35a6"
+]  
+```
+
+```bash
+export LANGFLOW_SESSION_ID=ed738a05-b1c2-4c80-b244-3c176f8e35a6
+```
+
+
+#### Get messages for a session
+```bash
+curl -s -H "x-api-key: ${LANGFLOW_API_KEY}" "${LANGFLOW_URL}/api/v1/monitor/messages?session_id=$LANGFLOW_SESSION_ID" | jq '.'
+```  
+
 
 #### To see all components within a specific category (e.g., openai):
 ```bash
@@ -648,7 +706,7 @@ curl -s --compressed -X GET \
     "${LANGFLOW_URL}/api/v1/all" \
     -H "accept: application/json" \
     -H "x-api-key: ${LANGFLOW_API_KEY}" | jq '.openai | keys'    
-```bash
+```
 
 #### Get all properties for a specific component
   **Format: .{category}.{ComponentName}**
@@ -667,11 +725,26 @@ curl -s --compressed -X GET \
   -H "accept: application/json" \
   -H "x-api-key: ${LANGFLOW_API_KEY}" | jq '.openai.OpenAIModel.template | keys'
 ```  
-  This returns:
+
+This returns:
 ```
-["_type", "api_key", "code", "input_value", "json_mode", "max_retries",
-  "max_tokens", "model_kwargs", "model_name", "openai_api_base", "seed",
-  "stream", "system_message", "temperature", "timeout"]
+[
+  "_type",
+  "api_key",
+  "code",
+  "input_value",
+  "json_mode",
+  "max_retries",
+  "max_tokens",
+  "model_kwargs",
+  "model_name",
+  "openai_api_base",
+  "seed",
+  "stream",
+  "system_message",
+  "temperature",
+  "timeout"
+]
 ```
 
 #### To see a specific field's details:

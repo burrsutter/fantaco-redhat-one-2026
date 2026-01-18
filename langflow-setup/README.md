@@ -42,6 +42,9 @@ langflow run
 ```bash
 export LANGFLOW_URL=http://localhost:7860
 open $LANGFLOW_URL
+
+export LANGFLOW_DOCS_URL=http://localhost:7860/docs
+open $LANGFLOW_DOCS_URL
 ```
 
 ## OpenShift Installation 
@@ -94,14 +97,12 @@ And create a route for backend as that is helpful to Claude Code and provides be
 oc create route edge langflow-backend-docs --service=langflow-service-backend --port=7860 -n langflow
 ```
 
-
-
 ```bash
 export LANGFLOW_URL=https://$(oc get routes -l app=langflow-service -o jsonpath="{range .items[*]}{.status.ingress[0].host}{end}")
 export LANGFLOW_DOCS_URL=https://$(oc get route langflow-backend-docs -n langflow -o jsonpath='{.spec.host}')
 ```
 
-GUI
+## GUI
 
 ```bash
 open $LANGFLOW_URL
@@ -113,43 +114,53 @@ Swagger/OpenAPI
 open $LANGFLOW_DOCS_URL/docs
 ```
 
-### API Keys and Claude Code 
+### API Keys for curl and Claude Code 
 
 Go into Settings, API Keys to give Claude Code access to Langflow
 
-![Langflow API Keys](images/langflow-api-keys.png)
+![Langflow API Keys](images/langflow-api-keys-1.png)
+
+![Langflow API Keys](images/langflow-api-keys-2.png)
+
+![Langflow API Keys](images/langflow-api-keys-3.png)
+
+![Langflow API Keys](images/langflow-api-keys-4.png)
+
 
 ```bash
-export LANGFLOW_API_KEY=sk-_1PBprunQLLzbhMsWtYh_ex-BxCEyVqR1HQP4d52EN4
+export LANGFLOW_API_KEY=sk-Cf4qdPkKlsd96y0bPB7p9nfBfCxyFRZlKWACurO5Vzk
 ```
+
+Provide LANGFLOW_URL, LANGFLOW_DOCS_URL and LANGFLOW_API_KEY as context to your coding agent (e.g. Claude Code) means it can help you debug problems with your flows.  
+
+![Langflow API Keys](images/langflow-api-keys-5.png)
 
 
 ## Hello World 
 
-Open the URL in your browser
-
-
-Create a new flow - Click "Create first flow"
+Create a new flow - Click **Create first flow**
 
 ![Langflow UI](images/langflow-1.png)
 
-Click "Blank Flow"
+Click **Blank Flow**
 
 ![Langflow UI](images/langflow-2.png)
 
-Drag a Text Input component onto the canvas
+Drag a **Text Input** component onto the canvas
 
 ![Langflow UI](images/langflow-3.png)
 
-Drag a Chat Output component onto the canvas
+Drag a **Chat Output** component onto the canvas
 
 ![Langflow UI](images/langflow-4.png)
 
 Connect them together (drag from the output node to the input node)
 
 ![Langflow UI](images/langflow-5.png)    
-  
-Test it - Click the "Playground" button (bottom right) and type a message
+
+Provide a message **Hello Aloha Bonjour**
+
+Click the **Playground** button 
 
 ![Langflow UI](images/langflow-6.png)
 
@@ -161,119 +172,417 @@ Using this icon to get back to the list of all projects and flows
 
 ![Langflow UI](images/langflow-9.png)
 
+You can use the ellipses **...** on the Project or Flow to make changes such as its name 
+
 ![Langflow UI](images/langflow-10.png)
 
+![Langflow UI](images/langflow-11.png)
 
-## Ollama
+## vLLM MaaS
+
+Langflow does **NOT** have an out-of-the-box (OOTB) Component that works with vLLM via MaaS.  Where you need to override:
+
+* API URL 
+* API Key
+* Model Name
+
+Insure you have connectivity to the vLLM MaaS by asking for a list of available models
 
 ```bash
-ollama serve
+curl -sS https://litellm-prod.apps.maas.redhatworkshops.io/v1/models   -H "Authorization: Bearer sk-dV5UNeAWHskJK" | jq
+```
+
+URL
+
+```
+https://litellm-prod.apps.maas.redhatworkshops.io/v1
+```
+
+Model Name (based on the curl command above)
+
+```
+qwen3-14b
+```
+
+API Key
+
+```
+sk-dV5UNeAWHskJK
+```
+
+Therefore we have a custom component. Click **+New Custom Component**
+
+![vLLM](images/vllm-custom-component-1.png)
+
+Click **Code**
+
+Delete the current code
+
+![vLLM](images/vllm-custom-component-2.png)
+
+Paste in the contents of **vllm_model_component.py**
+
+![vLLM](images/vllm-custom-component-3.png)
+
+Click **Check & Save**
+
+Enter the URL, Model Name and API Key
+
+Change **Language Model** to **Response** (we will Language Model later)
+
+![vLLM](images/vllm-custom-component-4.png)
+
+Add a **Chat Input** and **Chat Output** and connect the dots
+
+![vLLM](images/vllm-custom-component-5.png)
+
+Click **Playground**
+
+**what model are you?**
+
+![vLLM](images/vllm-custom-component-6.png)
+
+## Agent with vLLM
+
+Remove Chat Input and Chat Output (for now).  Change the output to be "Language Model" and find "Agent" in the list of Components
+
+![vLLM Agent](images/vllm-agent-1.png)
+
+Add an Agent 
+
+Click on "Model Provider"
+
+![vLLM Agent](images/vllm-agent-2.png)
+
+**+ Connect other models**
+
+![vLLM Agent](images/vllm-agent-3.png)
+
+Awaiting model input...
+
+![vLLM Agent](images/vllm-agent-4.png)
+
+Connect the vLLM Model to Agent
+
+![vLLM Agent](images/vllm-agent-4.1.png)
+
+Add Chat Input and Chat Output to the Agent
+
+![vLLM Agent](images/vllm-agent-5.png)
+
+Add MCP Component for Customer
+
+![vLLM Agent](images/vllm-agent-6.png)
+
+Click **+ Add MCP Server**
+
+![vLLM Agent](images/vllm-agent-7.png)
+
+Select **Streamable HTTP/SSE**
+
+Name: Customer
+
+Streamable HTTP/SSE URL
+
+http://localhost:9001/mcp
+
+Click **Add Server**
+
+![vLLM Agent](images/vllm-agent-8.png)
+
+Toggle Tool Mode
+
+![vLLM Agent](images/vllm-agent-9.png)
+
+When Response switches to Toolset, you can then connect it to the Agents Tools input
+
+![vLLM Agent](images/vllm-agent-10.png)
+
+Playground and test with "who does Thomas Hardy work for?"
+
+![vLLM Agent](images/vllm-agent-11.png)
+
+Add MCP Component for Finance
+
+![vLLM Agent](images/vllm-agent-12.png)
+
+**+ Add MCP Server**
+
+![vLLM Agent](images/vllm-agent-13.png)
+
+Select **Streamable HTTP/SSE**
+
+Name: Finance
+
+Streamable HTTP/SSE URL
+
+http://localhost:9002/mcp
+
+Click **Add Server**
+
+![vLLM Agent](images/vllm-agent-14.png)
+
+Toggle Tool Mode
+
+![vLLM Agent](images/vllm-agent-15.png)
+
+Connect MCP Servers to Agent Tools input
+
+![vLLM Agent](images/vllm-agent-16.png)
+
+What are the orders for Thomas Hardy?
+
+![vLLM Agent](images/vllm-agent-17.png)
+
+Add **Agent Instructions**
+
+![vLLM Agent](images/vllm-agent-18.png)
+
+
+```
+You are a helpful customer service assistant.
+
+IMPORTANT: When ANY person's name is mentioned, ALWAYS search for them as a customer first before answering.
+IMPORTANT: You MUST use tools to answer questions about customers or orders. Never guess or use general knowledge.
+
+TOOLS AND THEIR EXACT PARAMETERS:
+- search_customers(contact_name="Name") - search by customer name
+- get_customer(customer_id="ID") - get customer details
+- fetch_order_history(customer_id="ID") - get orders
+- fetch_invoice_history(customer_id="ID") - get invoices
+
+WORKFLOW for customer questions:
+1. Call search_customers(contact_name="<customer name>")
+2. Extract customer_id from results
+3. Use that customer_id for other queries
+
+Always use tools first. Never answer from general knowledge about people.   
+```
+
+![vLLM Agent](images/vllm-agent-19.png)
+
+
+## Curl
+
+Find your Flow ID
+
+![vLLM Agent](images/vllm-agent-20.png)
+
+Make sure your LANGFLOW_URL, LANGFLOW_API_KEY, and LANGFLOW_FLOW_ID are set correctly
+
+```bash 
+export LANGFLOW_URL=http://localhost:7860
+export LANGFLOW_API_KEY=sk-mit3KZiwrvstfEoisyhZgf3pyy65SxQ-6NJAxZIiVlc
+export LANGFLOW_FLOW_ID=aa5bb21b-2d71-4ffb-90de-540074f5d461
 ```
 
 ```bash
-ollama pull qwen3:14b-q8_0
+echo "LANGFLOW_URL="$LANGFLOW_URL
+echo "LANGFLOW_API_KEY="$LANGFLOW_API_KEY
+echo "LANGFLOW_FLOW_ID="$LANGFLOW_FLOW_ID
 ```
 
+Then you can run a curl command targeting the flow
 
-Ollama Server URL
+```bash
+curl -s --compressed -X POST \
+    "${LANGFLOW_URL}/api/v1/run/${LANGFLOW_FLOW_ID}" \
+    -H "Content-Type: application/json" \
+    -H "x-api-key: ${LANGFLOW_API_KEY}" \
+    -d '{"input_type": "chat", "output_type": "chat", "input_value": "what are the orders for Thomas Hardy?"}' | jq -r '.outputs[0].outputs[0].results.message.text' 
+```
 
 ```
-http://localhost:11434
+Here are the most recent orders for **Thomas Hardy** (Customer ID: **AROUT**):
+
+1. **Order #ORD-008**
+   - **Date**: January 30, 2024 @ 03:20 PM
+   - **Total**: $59.99
+   - **Status**: PENDING
+
+2. **Order #ORD-003**
+   - **Date**: January 25, 2024 @ 09:45 AM
+   - **Total**: $89.99
+   - **Status**: PENDING
+
+3. **Order #ORD-004**
+   - **Date**: January 10, 2024 @ 04:20 PM
+   - **Total**: $199.99
+   - **Status**: DELIVERED
+
+No new orders have been added to Thomas Hardy’s record since the last check. Let me know if you’d like to verify this information again or check for updates!
 ```
 
-![Langflow Ollama UI](images/langflow-ollama-1.png)
+## Tips & Technqiues
 
-![Langflow Ollama UI](images/langflow-ollama-2.png)
+When using Claude Code, it can be helpful to give it direct access to the two MCP servers
 
-![Langflow Ollama UI](images/langflow-ollama-3.png)
+```bash
+export CUSTOMER_MCP_SERVER_URL=http://localhost:9001/mcp
+export FINANCE_MCP_SERVER_URL=http://localhost:9002/mcp
+```
 
-## vLLM 
-
-
-  For an LLM-powered hello world:
-
-![Langflow vLLM UI](images/langflow-llm-1.png)
-
-Basic Flow
-
-  1. Add Chat Input component
-
-![Langflow UI](images/langflow-llm-2.png)
-
-  2. Add Custom Component
-
-![Langflow UI](images/langflow-llm-5.png)
-
-  3. Code
-
-![Langflow UI](images/langflow-llm-6.png)
-
-  4. Paste in *vll_model_component.py* contents
-
-![Langflow UI](images/langflow-llm-7.png)
-
-  Click *Check and Save*
-
-
-
-vLLM API Base URL 
-
-
-**https://litellm-prod.apps.maas.redhatworkshops.io/v1**
-
-
-Model Name:
-
-
-**qwen3-14b**
-
-
-API Key from the workshop showroom
-
-
-sk-ra1gvuhDVSRRLVog7szx8Q
-
-if you need these variables later
+And the vLLM MaaS information can be useful to Claude Code as well
 
 ```bash
 export BASE_URL=https://litellm-prod.apps.maas.redhatworkshops.io/v1
 export INFERENCE_MODEL=qwen3-14b
-export API_KEY=sk-ra1gvuhDVSRRLVog7szx8Q
+export API_KEY=sk-dV5UNeAWHskJKpbN0gQ05A
 ```
 
-![Langflow UI](images/langflow-llm-8.png)
+```Claude
+what components are in the flow $LANGFLOW_FLOW_ID
+```
+
+```
+Flow aa5bb21b-2d71-4ffb-90de-540074f5d461 contains 6 components:
+  ┌───────────────────────┬────────────┬──────────────────────┐
+  │          ID           │    Type    │     Display Name     │
+  ├───────────────────────┼────────────┼──────────────────────┤
+  │ CustomComponent-4rRXY │ VLLMModel  │ vLLM Model           │
+  ├───────────────────────┼────────────┼──────────────────────┤
+  │ Agent-XRhIx           │ Agent      │ Agent                │
+  ├───────────────────────┼────────────┼──────────────────────┤
+  │ ChatInput-dQgak       │ ChatInput  │ Chat Input           │
+  ├───────────────────────┼────────────┼──────────────────────┤
+  │ ChatOutput-44mmf      │ ChatOutput │ Chat Output          │
+  ├───────────────────────┼────────────┼──────────────────────┤
+  │ MCPTools-ii0XJ        │ MCPTools   │ MCP Tools (customer) │
+  ├───────────────────────┼────────────┼──────────────────────┤
+  │ MCPTools-TMEyy        │ MCPTools   │ MCP Tools (finance)  │
+  └───────────────────────┴────────────┴──────────────────────┘
+```
+
+```
+what are the connections between the components?
+```
+
+```
+  ┌─────────────────────────────┬─────────────┬──────────────────────────────┐
+  │           Source            │   Target    │           Purpose            │
+  ├─────────────────────────────┼─────────────┼──────────────────────────────┤
+  │ VLLMModel → Agent           │ agent_llm   │ Language model for the Agent │
+  ├─────────────────────────────┼─────────────┼──────────────────────────────┤
+  │ ChatInput → Agent           │ input_value │ User message input           │
+  ├─────────────────────────────┼─────────────┼──────────────────────────────┤
+  │ MCPTools (customer) → Agent │ tools       │ Customer service tools       │
+  ├─────────────────────────────┼─────────────┼──────────────────────────────┤
+  │ MCPTools (finance) → Agent  │ tools       │ Finance tools                │
+  ├─────────────────────────────┼─────────────┼──────────────────────────────┤
+  │ Agent → ChatOutput          │ input_value │ Agent response output        │
+  └─────────────────────────────┴─────────────┴──────────────────────────────┘
+  ┌─────────────┐     ┌─────────────────┐     ┌─────────────┐
+  │  ChatInput  │────▶│                 │────▶│ ChatOutput  │
+  └─────────────┘     │                 │     └─────────────┘
+                      │      Agent      │
+  ┌─────────────┐     │                 │
+  │  VLLMModel  │────▶│   (agent_llm)   │
+  └─────────────┘     │                 │
+                      │                 │
+  ┌─────────────┐     │                 │
+  │  MCPTools   │────▶│    (tools)      │
+  │ (customer)  │     │                 │
+  └─────────────┘     │                 │
+                      │                 │
+  ┌─────────────┐     │                 │
+  │  MCPTools   │────▶│    (tools)      │
+  │  (finance)  │     │                 │
+  └─────────────┘     └─────────────────┘
+```
 
 
-Add Chat Output component
-
-![Langflow UI](images/langflow-llm-9.png)
-
-
-Connect: Chat Input → vLLM → Chat Output
-
-![Langflow UI](images/langflow-llm-10.png)
-
-Open Playground and chat with your flow
-
-![Langflow UI](images/langflow-llm-11.png)
-
-![Langflow UI](images/langflow-llm-12.png)
-
-
-## MaaS Agent Flow
+## Adding a Flow via Curl
 
 ```bash
 curl -s --compressed -X POST \
     "${LANGFLOW_URL}/api/v1/flows/" \
     -H "Content-Type: application/json" \
     -H "x-api-key: ${LANGFLOW_API_KEY}" \
-    -d @flow_examples/maas-agent-flow.json
+    -d @flow_examples/vLLM_MaaS_Agent_MCP_Customer_Finance.json
 ```
 
-## MCP
+## MCP Servers
 
 ### Localhost MCP
 
+```bash
+brew services list
+```
+
+```bash
+brew services start postgresql@14
+```
+
+```bash
+cd fantaco-customer-main
+```
+
+Run the Customer REST API
+
+```bash
+java -jar target/fantaco-customer-main-1.0.0.jar
+```
+
+### Quick test of Customer REST API
+
+```bash
+export CUST_URL=http://localhost:8081
+curl -sS -L "$CUST_URL/api/customers?companyName=Around" | jq
+```
+
+## Start Finance Backend
+
+```bash
+cd fantaco-finance-main
+```
+
+Run the Finance REST API
+
+```bash
+java -jar target/fantaco-finance-main-1.0.0.jar
+```
+
+### Quick test for Finance REST API
+
+```bash
+export FIN_URL=http://localhost:8082
+curl -sS -X POST $FIN_URL/api/finance/orders/history \
+  -H "Content-Type: application/json" \
+  -d '{
+    "customerId": "AROUT",
+    "limit": 10
+  }' | jq
+```
+
+### Localhost MCP
+
+```bash
+source .venv/bin/activate
+cd fantaco-mcp-servers/customer-mcp
+```
+
+```bash
+python customer-api-mcp-server.py
+```
+
+## Finance MCP
+
+```bash
+source .venv/bin/activate
+cd fantaco-mcp-servers/finance-mcp
+```
+
+```bash
+python finance-api-mcp-server.py
+```
+
+Using `mcp-inspector` to test the MCP Servers
+
+```bash
+brew install mcp-inspector
+```
+
+![mcp-inspector-customer](images/mcp-inspector-customer.png)
 
 ### OpenShift hosted MCP 
 
@@ -293,33 +602,11 @@ https://mcp-customer-route-agentic-user5.apps.cluster-q5gsb.dynamic.redhatworksh
 https://mcp-finance-route-agentic-user5.apps.cluster-q5gsb.dynamic.redhatworkshops.io/mcp
 ```
 
-![Langflow UI](images/langflow-mcp-1.png)
 
-![Langflow UI](images/langflow-mcp-2.png)
-
-
-```bash
-export LANGFLOW_API_KEY=sk--gPzsAUBjtLmrkNcRa19y8ADbhMklPCg_UFTDK_wRqw
-export LANGFLOW_URL=https://$(oc get routes -l app=langflow-service -o jsonpath="{range .items[*]}{.status.ingress[0].host}{end}")
-```
-
-
-Curl based testing
-
-```bash
-export LANGFLOW_FLOW_ID=0c0c981b-be3f-426d-b4e9-ecb608ce56b3
-
-  curl -s --compressed -X POST \
-    "${LANGFLOW_URL}/api/v1/run/${LANGFLOW_FLOW_ID}" \
-    -H "Content-Type: application/json" \
-    -H "x-api-key: ${LANGFLOW_API_KEY}" \
-    -d '{"input_type": "chat", "output_type": "chat", "input_value": "what model are you?"}' | jq '.'
-```
-
-## Langflow API
+## Langflow API Examples
 
 ```
-curl -s -X GET \
+curl -s --compressed -X GET \
     "${LANGFLOW_URL}/api/v1/flows/?get_all=true" \
     -H "accept: application/json" \
     -H "x-api-key: ${LANGFLOW_API_KEY}" | jq '.[] | {id: .id, name: .name}'
@@ -327,69 +614,133 @@ curl -s -X GET \
 
 ## Debugging
 
-  # Get build logs for a specific flow
-  curl -s --compressed "${LANGFLOW_URL}/api/v1/monitor/builds?flow_id=YOUR_FLOW_ID" \
-    -H "x-api-key: ${LANGFLOW_API_KEY}" | jq '.'
+#### Get build logs for a specific flow
+```bash
+curl -s --compressed "${LANGFLOW_URL}/api/v1/monitor/builds?flow_id=YOUR_FLOW_ID" \
+  -H "x-api-key: ${LANGFLOW_API_KEY}" | jq '.'
+```  
 
-  # Get messages for a session
-  curl -s --compressed "${LANGFLOW_URL}/api/v1/monitor/messages/session/YOUR_SESSION_ID" \
-    -H "x-api-key: ${LANGFLOW_API_KEY}" | jq '.'
+#### Get messages for a session
+```bash
+curl -s --compressed "${LANGFLOW_URL}/api/v1/monitor/messages/session/YOUR_SESSION_ID" \
+  -H "x-api-key: ${LANGFLOW_API_KEY}" | jq '.'
+```  
 
-  
-  curl -s -X POST "${LANGFLOW_URL}/api/v1/run/YOUR_FLOW_ID" \
-    -H "Content-Type: application/json" \
-    -H "x-api-key: ${LANGFLOW_API_KEY}" \
-    -d '{"input_type": "chat", "output_type": "chat", "input_value": "test"}' | jq '.'
+#### List all flows
+```bash
+curl -s --compressed -X GET \
+  "${LANGFLOW_URL}/api/v1/flows/?remove_example_flows=true&get_all=true" \
+  -H "accept: application/json" \
+  -H "x-api-key: ${LANGFLOW_API_KEY}" | jq '.[] | {id: .id, name: .name}'
+```
 
+#### List all components
+```bash
+curl -s --compressed -X GET \
+  "${LANGFLOW_URL}/api/v1/store/components/" \
+  -H "accept: application/json" \
+  -H "x-api-key: ${LANGFLOW_API_KEY}" | jq '.results[] | {name: .name, description: .description}'
+```
 
-
-  # Set environment variables
-  export LANGFLOW_URL=https://$(oc get routes -l app=langflow-service -o jsonpath="{range .items[*]}{.status.ingress[0].host}{end}")
-  export LANGFLOW_API_KEY=sk-ad1SVjErw7NtrTkKBjPeaL0N4R0KYRozqW3V5d8nhfI
-
-  # List all flows
-  curl -s --compressed -X GET \
-    "${LANGFLOW_URL}/api/v1/flows/?remove_example_flows=true&get_all=true" \
-    -H "accept: application/json" \
-    -H "x-api-key: ${LANGFLOW_API_KEY}" | jq '.[] | {id: .id, name: .name}'
-
-
-# list all components
-  curl -s --compressed -X GET \
-    "${LANGFLOW_URL}/api/v1/store/components/" \
-    -H "accept: application/json" \
-    -H "x-api-key: ${LANGFLOW_API_KEY}" | jq '.results[] | {name: .name, description: .description}'
-
-To see all components within a specific category (e.g., openai):
+#### To see all components within a specific category (e.g., openai):
+```bash
 curl -s --compressed -X GET \
     "${LANGFLOW_URL}/api/v1/all" \
     -H "accept: application/json" \
     -H "x-api-key: ${LANGFLOW_API_KEY}" | jq '.openai | keys'    
+```bash
 
+#### Get all properties for a specific component
+  **Format: .{category}.{ComponentName}**
 
+```bash  
+curl -s --compressed -X GET \
+  "${LANGFLOW_URL}/api/v1/all" \
+  -H "accept: application/json" \
+  -H "x-api-key: ${LANGFLOW_API_KEY}" | jq '.openai.OpenAIModel'
+```
 
-  # Get all properties for a specific component
-  # Format: .{category}.{ComponentName}
-  curl -s --compressed -X GET \
-    "${LANGFLOW_URL}/api/v1/all" \
-    -H "accept: application/json" \
-    -H "x-api-key: ${LANGFLOW_API_KEY}" | jq '.openai.OpenAIModel'
-
-  To get just the input fields (template properties):
-
-  curl -s --compressed -X GET \
-    "${LANGFLOW_URL}/api/v1/all" \
-    -H "accept: application/json" \
-    -H "x-api-key: ${LANGFLOW_API_KEY}" | jq '.openai.OpenAIModel.template | keys'
-
+#### To get just the input fields (template properties):
+```bash
+curl -s --compressed -X GET \
+  "${LANGFLOW_URL}/api/v1/all" \
+  -H "accept: application/json" \
+  -H "x-api-key: ${LANGFLOW_API_KEY}" | jq '.openai.OpenAIModel.template | keys'
+```  
   This returns:
-  ["_type", "api_key", "code", "input_value", "json_mode", "max_retries",
-   "max_tokens", "model_kwargs", "model_name", "openai_api_base", "seed",
-   "stream", "system_message", "temperature", "timeout"]
+```
+["_type", "api_key", "code", "input_value", "json_mode", "max_retries",
+  "max_tokens", "model_kwargs", "model_name", "openai_api_base", "seed",
+  "stream", "system_message", "temperature", "timeout"]
+```
 
-  To see a specific field's details:
+#### To see a specific field's details:
+```bash
+curl -s --compressed -X GET \
+  "${LANGFLOW_URL}/api/v1/all" \
+  -H "accept: application/json" \
+  -H "x-api-key: ${LANGFLOW_API_KEY}" | jq '.openai.OpenAIModel.template.model_name'
+```
 
-  curl -s --compressed -X GET \
-    "${LANGFLOW_URL}/api/v1/all" \
-    -H "accept: application/json" \
-    -H "x-api-key: ${LANGFLOW_API_KEY}" | jq '.openai.OpenAIModel.template.model_name'
+## State
+
+Where are your flows stored
+
+### Localhost
+
+```bash
+ls $VIRTUAL_ENV/lib/python3.12/site-packages/langflow/langflow.db*
+```
+
+```
+/Users/bsutter/ai-projects/fantaco-redhat-one-2026/.venv/lib/python3.12/site-packages/langflow/langflow.db
+/Users/bsutter/ai-projects/fantaco-redhat-one-2026/.venv/lib/python3.12/site-packages/langflow/langflow.db-shm
+/Users/bsutter/ai-projects/fantaco-redhat-one-2026/.venv/lib/python3.12/site-packages/langflow/langflow.db-wal
+```
+
+SQLite writes these alongside the DB when WAL journaling is enabled:
+	•	langflow.db-wal → the write-ahead log (recent writes)
+	•	langflow.db-shm → shared memory index for WAL
+
+Upgrades/reinstalls can blow this away, and it’s awkward for backups.
+
+
+Move the location
+
+```bash
+export LANGFLOW_DATABASE_URL="sqlite:///path/to/your/langflow.db"
+```
+
+or make it relative to your current location
+
+```bash
+mkdir -p .langflow
+export LANGFLOW_DATABASE_URL="sqlite:///$PWD/.langflow/langflow.db"
+langflow run
+```
+
+
+### Export all flows
+
+```bash
+curl -s "http://localhost:7860/api/v1/flows/" \
+    -H "x-api-key: $LANGFLOW_API_KEY" | jq . > flows_backup.json
+```
+
+### Reset
+
+Option 1: Delete the database (recommended)
+Stop Langflow first (Ctrl+C in the terminal running it)
+Remove the database files
+
+```bash
+rm $VIRTUAL_ENV/lib/python3.12/site-packages/langflow/langflow.db*
+```
+
+Restart Langflow - it will create a fresh database
+
+```bash
+langflow run
+```
+
+

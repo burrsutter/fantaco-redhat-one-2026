@@ -4,19 +4,16 @@ vLLM Model Component for Langflow
 This component connects to a vLLM server and outputs a LanguageModel
 that can be used with Agent components.
 
-Upload this file via Langflow UI:
-  Settings (gear icon) → Custom Components → Upload
 """
 
 from langchain_openai import ChatOpenAI
-from pydantic.v1 import SecretStr
 
-from langflow.custom import Component
-from langflow.io import DropdownInput, FloatInput, IntInput, MessageInput, Output, SecretStrInput, StrInput
+from langflow.base.models.model import LCModelComponent
+from langflow.io import FloatInput, IntInput, MessageInput, Output, SecretStrInput, StrInput
 from langflow.schema.message import Message
 
 
-class VLLMModelComponent(Component):
+class VLLMModelComponent(LCModelComponent):
     display_name = "vLLM Model"
     description = "Connects to a vLLM server via OpenAI-compatible API. Use Language Model output for Agents."
     icon = "server"
@@ -75,14 +72,16 @@ class VLLMModelComponent(Component):
     outputs = [
         Output(
             display_name="Language Model",
-            name="language_model",
+            name="model_output",
             method="build_model",
+            types=["LanguageModel"],
             info="Connect this to an Agent's Language Model input",
         ),
         Output(
             display_name="Response",
-            name="response",
+            name="text_output",
             method="generate_response",
+            types=["Message"],
             info="Direct text response (for non-Agent use)",
         ),
     ]

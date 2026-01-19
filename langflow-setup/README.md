@@ -51,61 +51,45 @@ open $LANGFLOW_DOCS_URL
 
 ## OpenShift Installation 
 
-As Cluster Admin
-
-
 ```bash
-helm repo add langflow https://langflow-ai.github.io/langflow-helm-charts
-helm repo update
+cd $HOME/fantaco-redhat-one-2026/langflow-setup/
 ```
 
 ```bash
-helm install langflow-ide langflow/langflow-ide \
-  --set langflow.backend.resources.limits.cpu=1 \
-  --set langflow.backend.resources.limits.memory=2Gi \
-  --set langflow.frontend.resources.limits.cpu=500m \
-  --set langflow.frontend.resources.limits.memory=1Gi \
-  --set serviceAccount.create=false
+oc apply -f langflow-openshift.yaml
 ```
-
 
 ```bash
 watch oc get pods 
 ```
 
 ```
-NAME                                         READY   STATUS              RESTARTS   AGE
-langflow-service-0                           0/1     ContainerCreating   0          18s
-langflow-service-frontend-84dcb78879-rwrm6   1/1     Running             0          18s
+NAME                                           READY   STATUS    RESTARTS        AGE
+fantaco-customer-main-7fd4ddb666-6mbl4         1/1     Running   0               3h24m
+fantaco-finance-main-75ffddb44b-b955b          1/1     Running   0               3h24m
+langflow-57c45bb775-v5n8d                      1/1     Running   0               40m
+langfuse-clickhouse-shard0-0                   1/1     Running   0               3h23m
+langfuse-postgresql-0                          1/1     Running   0               3h23m
+langfuse-redis-primary-0                       1/1     Running   0               3h23m
+langfuse-s3-5fb6c8f845-qv2gx                   1/1     Running   0               3h23m
+langfuse-web-669bd79b5b-jxhxw                  1/1     Running   1 (3h22m ago)   3h23m
+langfuse-worker-7b7bbd5c88-hwxv9               1/1     Running   0               3h23m
+langfuse-zookeeper-0                           1/1     Running   0               3h23m
+langgraph-fastapi-569d6d554-4g4gv              1/1     Running   0               3h24m
+llamastack-distribution-vllm-94c6f788d-4pgtx   1/1     Running   0               3h26m
+mcp-customer-6bd8bcfc7b-xnppk                  1/1     Running   0               3h24m
+mcp-finance-8cc684b8d-29h2p                    1/1     Running   0               3h24m
+my-workbench-0                                 2/2     Running   0               3h8m
+postgresql-customer-ff78dffdf-v4gp5            1/1     Running   0               3h24m
+postgresql-finance-689d97894f-8p58c            1/1     Running   0               3h24m
+simple-agent-chat-ui-6d7794dc6b-mwjcn          1/1     Running   0               3h24m
 ```
 
-```bash
-oc get statefulset
-NAME               READY   AGE
-langflow-service   0/1     6m54s
-```
-
-Wait a bit before running the fix script
+Get route for frontend
 
 ```bash
-./fix-langflow-probes.sh
-```
-
-Create route for frontend
-
-```bash
-oc create route edge langflow-service --service=langflow-service -n langflow
-```
-
-And create a route for backend as that is helpful to Claude Code and provides better API access
-
-```bash
-oc create route edge langflow-backend-docs --service=langflow-service-backend --port=7860 -n langflow
-```
-
-```bash
-export LANGFLOW_URL=https://$(oc get routes -l app=langflow-service -o jsonpath="{range .items[*]}{.status.ingress[0].host}{end}")
-export LANGFLOW_DOCS_URL=https://$(oc get route langflow-backend-docs -n langflow -o jsonpath='{.spec.host}')
+export LANGFLOW_URL="https://$(oc get route langflow -o jsonpath='{.spec.host}')" 
+echo $LANGFLOW_URL
 ```
 
 ## GUI
@@ -117,7 +101,7 @@ open $LANGFLOW_URL
 Swagger/OpenAPI 
 
 ```bash
-open $LANGFLOW_DOCS_URL/docs
+open $LANGFLOW_URL/docs
 ```
 
 ### API Keys for curl and Claude Code 
@@ -306,6 +290,11 @@ http://localhost:9001/mcp
 
 or your OpenShift hosted endpoint
 
+```bash
+export CUSTOMER_MCP_SERVER_URL=https://$(oc get routes -l app=mcp-customer -o jsonpath="{range .items[*]}{.status.ingress[0].host}{end}")/mcp
+echo $CUSTOMER_MCP_SERVER_URL
+```
+
 Click **Add Server**
 
 ![vLLM Agent](images/vllm-agent-8.png)
@@ -345,6 +334,12 @@ Streamable HTTP/SSE URL
 http://localhost:9002/mcp
 
 or your OpenShift hosted endpoint
+
+```bash
+export FINANCE_MCP_SERVER_URL=https://$(oc get routes -l app=mcp-finance -o jsonpath="{range .items[*]}{.status.ingress[0].host}{end}")/mcp
+echo $FINANCE_MCP_SERVER_URL
+
+```
 
 Click **Add Server**
 

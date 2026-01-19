@@ -37,8 +37,6 @@ spec:
               value: "0.0.0.0"
             - name: LANGFLOW_PORT
               value: "7860"
-            - name: LANGFLOW_DATABASE_URL
-              value: "sqlite:////data/langflow.db"
           resources:
             requests:
               cpu: 500m
@@ -48,7 +46,7 @@ spec:
               memory: 2Gi
           volumeMounts:
             - name: data
-              mountPath: /data
+              mountPath: /app/data
             - name: tmp
               mountPath: /tmp
           livenessProbe:

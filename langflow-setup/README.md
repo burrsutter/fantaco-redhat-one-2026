@@ -57,13 +57,17 @@ As Cluster Admin
 ```bash
 helm repo add langflow https://langflow-ai.github.io/langflow-helm-charts
 helm repo update
-
-helm install langflow-ide langflow/langflow-ide --namespace langflow --create-namespace
 ```
 
 ```bash
-oc project langflow
+helm install langflow-ide langflow/langflow-ide \
+  --set langflow.backend.resources.limits.cpu=1 \
+  --set langflow.backend.resources.limits.memory=2Gi \
+  --set langflow.frontend.resources.limits.cpu=500m \
+  --set langflow.frontend.resources.limits.memory=1Gi \
+  --set serviceAccount.create=false
 ```
+
 
 ```bash
 watch oc get pods 

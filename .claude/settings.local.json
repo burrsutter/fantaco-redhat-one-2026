@@ -55,7 +55,16 @@
       "Bash(git commit:*)",
       "Bash(git push:*)",
       "Bash(oc describe:*)",
-      "Bash(oc patch:*)"
+      "Bash(oc patch:*)",
+      "Bash(oc run:*)",
+      "Bash(oc debug:*)",
+      "Bash(oc apply:*)",
+      "Bash(oc rollout:*)",
+      "Bash(oc project:*)",
+      "Bash(oc delete:*)",
+      "WebSearch",
+      "WebFetch(domain:access.redhat.com)",
+      "WebFetch(domain:docs.redhat.com)"
     ],
     "deny": [],
     "ask": []

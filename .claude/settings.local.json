@@ -67,7 +67,11 @@
       "WebFetch(domain:docs.redhat.com)",
       "Bash(export LLAMA_STACK_BASE_URL=http://localhost:8321)",
       "Bash(export INFERENCE_MODEL=vllm/qwen3-14b)",
-      "Bash(export QUESTION=\"what model are you?\")"
+      "Bash(export QUESTION=\"what model are you?\")",
+      "Bash(git checkout:*)",
+      "Bash(git fetch:*)",
+      "Bash(git restore:*)",
+      "Bash(oc login:*)"
     ],
     "deny": [],
     "ask": []

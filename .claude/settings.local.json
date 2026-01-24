@@ -64,7 +64,10 @@
       "Bash(oc delete:*)",
       "WebSearch",
       "WebFetch(domain:access.redhat.com)",
-      "WebFetch(domain:docs.redhat.com)"
+      "WebFetch(domain:docs.redhat.com)",
+      "Bash(export LLAMA_STACK_BASE_URL=http://localhost:8321)",
+      "Bash(export INFERENCE_MODEL=vllm/qwen3-14b)",
+      "Bash(export QUESTION=\"what model are you?\")"
     ],
     "deny": [],
     "ask": []

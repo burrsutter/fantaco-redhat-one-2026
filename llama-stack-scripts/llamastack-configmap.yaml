@@ -40,17 +40,21 @@ data:
           kvstore:
             backend: default
             namespace: "milvus"
+          persistence:
+            backend: default
+            namespace: "milvus_persistence"
       agents:
       - provider_id: meta-reference
         provider_type: inline::meta-reference
         config:
-          persistence_store:
-            backend: default
-            namespace: "agents"
-          responses_store:
-            backend: sql
-            namespace: "agents"
-            table_name: "responses"
+          persistence:
+            agent_state:
+              backend: default
+              namespace: "agent_state"
+            responses:
+              backend: sql
+              namespace: "agents"
+              table_name: "responses"
       eval:
       - provider_id: meta-reference
         provider_type: inline::meta-reference

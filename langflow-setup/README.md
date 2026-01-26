@@ -531,6 +531,174 @@ Make sure to re-enter the API Key
 
 ![After Import](images/after-import-1.png)
 
+
+## Llama Stack instead of vLLM
+
+```bash
+oc create route edge llamastack --service=llamastack-distribution-vllm-service --insecure-policy=Redirect
+export LLAMA_STACK_BASE_URL="https://$(oc get route llamastack -o jsonpath='{.spec.host}')"
+echo $LLAMA_STACK_BASE_URL
+```
+
+Replace the vLLM URL with LLAMA_STACK_BASE_URL
+
+Make sure to add "/v1" at the end.
+
+And update the model name to have the prefix "vllm/"
+
+
+![Llama Stack](images/langflow-llama-stack-1.png)
+
+## Import and Test
+
+This section describes how to import a flow and verify it works correctly using the provided scripts.
+
+### Prerequisites
+
+Set the required environment variables:
+
+```bash
+source 2-view-langflow-urls.sh
+source export_customer_finance_mcp_urls.sh
+export LANGFLOW_API_KEY=sk-xxxxx
+```
+
+**Note:** You must manually set `LANGFLOW_API_KEY` with a valid API key from the Langflow UI (Settings → API Keys). The other scripts will source the MCP URLs automatically.
+
+### Step 1: Import the Flow
+
+Import the `vLLM_MaaS_Agent_MCP_Customer_Finance` flow with correct MCP URLs:
+
+```bash
+./7-import-flow.sh
+```
+
+This script:
+- Reads `flow_examples/vLLM_MaaS_Agent_MCP_Customer_Finance.json`
+- Replaces localhost MCP URLs with your OpenShift MCP server URLs
+- POSTs the flow to Langflow API
+- Outputs the flow ID (set it with `export LANGFLOW_FLOW_ID=<id>`)
+
+### Step 2: Smoke Test
+
+Run a quick smoke test to verify the flow executes:
+
+```bash
+./8-smoke-test-flow.sh
+```
+
+This sends a test query ("Who is Maria Anders?") and validates the response contains expected customer data.
+
+### Step 3: Debug (if needed)
+
+If the flow fails, use the monitor script to diagnose issues:
+
+```bash
+./9-monitor-logs.sh
+```
+
+This displays:
+- Flow details and components
+- Recent sessions and messages
+- Build status
+- Error messages and tracebacks from a test run
+
+### Step 4: Run Evals
+
+**Important:** Run this from INSIDE Claude Code. Claude acts as the LLM-as-judge to semantically compare actual answers against expected answers in `evals.csv`.
+
+```bash
+./10-execute-evals.sh
+```
+
+This script:
+- Loads questions and expected answers from `evals.csv`
+- Executes each query against the flow
+- Displays both expected and actual answers
+- Claude Code evaluates pass/fail for each
+
+### Quick Reference
+
+| Script | Purpose |
+|--------|---------|
+| `7-import-flow.sh` | Import flow with correct MCP URLs |
+| `8-smoke-test-flow.sh` | Quick sanity check |
+| `9-monitor-logs.sh` | Debug flow issues |
+| `10-execute-evals.sh` | Full evaluation suite (run in Claude Code) |
+
+## Multi-User API Access
+
+For production multi-user access, deploy the backend-only API alongside the frontend.
+
+### Architecture
+
+- **Frontend** (`langflow-openshift.yaml`): UI for flow design at `LANGFLOW_URL`
+- **Backend API** (`langflow-openshift-with-api.yaml`): Headless API at `LANGFLOW_API_URL`
+- Both share the same PVC, so flows are synchronized
+
+### Deploy Both Frontend and Backend
+
+```bash
+./1-deploy-frontend-backend.sh
+```
+
+Or deploy individually:
+
+```bash
+oc apply -f langflow-openshift.yaml
+oc apply -f langflow-openshift-with-api.yaml
+```
+
+### Set Environment Variables
+
+```bash
+source 2-view-langflow-urls.sh
+source export_customer_finance_mcp_urls.sh
+export LANGFLOW_API_KEY=sk-xxxxx
+```
+
+### Import Flow with Correct MCP URLs
+
+The `7-import-flow.sh` script reads the flow JSON template and replaces localhost MCP URLs with your actual OpenShift MCP server URLs:
+
+```bash
+./7-import-flow.sh
+```
+
+This script:
+1. Reads `flow_examples/vLLM_MaaS_Agent_MCP_Customer_Finance.json`
+2. Replaces `http://localhost:9001/mcp` with `$CUSTOMER_MCP_SERVER_URL`
+3. Replaces `http://localhost:9002/mcp` with `$FINANCE_MCP_SERVER_URL`
+4. POSTs the transformed JSON to the Langflow API
+5. Outputs the flow ID for invocation
+
+### Test the Flow
+
+```bash
+./8-test-flow.sh
+```
+
+### Invoke the Flow
+
+```bash
+./6-invoke-flow.sh "Who is Thomas Hardy?"
+```
+
+Or with explicit flow URL:
+
+```bash
+./6-invoke-flow.sh https://langflow-xxx/flow/uuid "what are the orders for Thomas Hardy?"
+```
+
+### Verification Steps
+
+1. `./7-import-flow.sh` - should output flow ID
+2. `./3-view-all-flows.sh` - should show imported flow
+3. `./4-list-langflow-components.sh` - should show 6 components
+4. `./5-list-connections.sh` - should show 5 connections
+5. `./8-test-flow.sh` - should return customer data
+6. `./6-invoke-flow.sh "what are the orders for Thomas Hardy?"` - should return order data
+
 ## MCP Servers
 
 ### Localhost MCP
@@ -814,5 +982,8 @@ Restart Langflow - it will create a fresh database
 ```bash
 langflow run
 ```
+
+
+## Langflow Flow Invocation
 
 

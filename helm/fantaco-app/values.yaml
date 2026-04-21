@@ -72,7 +72,7 @@ finance:
     password: postgres
   jpa:
     hibernate:
-      ddlAuto: update
+      ddlAuto: create-drop
     showSql: false
   logging:
     level: INFO

@@ -19,7 +19,7 @@ from langchain_mcp_adapters.client import MultiServerMCPClient
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import HumanMessage, AIMessage, SystemMessage, ToolMessage
 from langfuse.langchain import CallbackHandler
-from langfuse import get_client
+from langfuse import get_client, propagate_attributes
 
 # Load environment variables from the same directory as this script
 _env_path = pathlib.Path(__file__).parent / ".env"
@@ -344,38 +344,34 @@ When a user asks about a customer:
 Be concise and helpful.""")
 
     # Use span context to ensure trace is properly created and captured
-    with langfuse.start_as_current_span(name="customer-service-chat") as span:
-        # Update trace with metadata
-        span.update_trace(
-            user_id=user_id,
-            session_id=session_id,
-            input={"message": message}
-        )
+    with langfuse.start_as_current_observation(
+        as_type="span", name="customer-service-chat"
+    ) as span:
+        with propagate_attributes(user_id=user_id, session_id=session_id):
+            span.set_trace_io(input={"message": message})
 
-        result = await graph.ainvoke(
-            {
-                "messages": [
-                    system_message,
-                    HumanMessage(content=message)
-                ]
-            },
-            config={"callbacks": [langfuse_handler]}
-        )
+            result = await graph.ainvoke(
+                {
+                    "messages": [
+                        system_message,
+                        HumanMessage(content=message)
+                    ]
+                },
+                config={"callbacks": [langfuse_handler]}
+            )
 
-        # Extract final response
-        final_response = ""
-        if result.get("messages"):
-            # Find the last AI message
-            for msg in reversed(result["messages"]):
-                if isinstance(msg, AIMessage) and msg.content:
-                    final_response = msg.content
-                    break
+            # Extract final response
+            final_response = ""
+            if result.get("messages"):
+                # Find the last AI message
+                for msg in reversed(result["messages"]):
+                    if isinstance(msg, AIMessage) and msg.content:
+                        final_response = msg.content
+                        break
 
-        # Update trace with output
-        span.update_trace(output={"response": final_response})
+            span.set_trace_io(output={"response": final_response})
 
-        # Get trace ID from the span
-        trace_id = span.trace_id
+            trace_id = span.trace_id
 
     # Flush Langfuse to ensure all trace data is sent
     langfuse.flush()
